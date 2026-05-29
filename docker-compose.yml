@@ -1,0 +1,53 @@
+services:
+#  react:
+#    build: react
+#    environment:
+#      - BACKEND_BASE_URL=http://spring:8177/api
+#    ports:
+#      - "80:80"
+#    depends_on:
+#      - spring
+
+  spring:
+    build:
+      context: hsms
+      dockerfile: Dockerfile
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - WGMGR_DB_CONN_STR=postgresql://db:5432/vpn
+    ports:
+      - "8177:8177"
+#    depends_on:
+#      - db
+
+#  prometheus:
+#    image: prom/prometheus:main
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./prometheus/dev.prometheus.yml:/etc/prometheus/prometheus.yml
+#      - promdata:/prometheus
+
+#  grafana:
+#    image: grafana/grafana:main-ubuntu
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - ./grafana/provisioning:/etc/grafana/provisioning
+#    depends_on:
+#      - prometheus
+
+#  db:
+#    image: postgres:16
+#    environment:
+#      - POSTGRES_USER
+#      - POSTGRES_PASSWORD
+#      - POSTGRES_DB=vpn
+#    volumes:
+#      - ./postgres/initdb.d:/docker-entrypoint-initdb.d
+#      - pgdata:/var/lib/postgresql/data
+
+#volumes:
+#  pgdata:
+#  promdata:
