@@ -9,20 +9,6 @@ services:
 #      - spring
 
 
-
-#  spring:
-#    build:
-#      context: hsms
-#      dockerfile: Dockerfile
-#    environment:
-#      - POSTGRES_USER
-#      - POSTGRES_PASSWORD
-#      - WGMGR_DB_CONN_STR=postgresql://db:5432/hsms
-#    ports:
-#      - "8177:8177"
-#    depends_on:
-#      - db
-
   spring:
     image: maven:3.9.16-eclipse-temurin-17
     working_dir: /app
@@ -35,25 +21,31 @@ services:
       - WGMGR_DB_CONN_STR=postgresql://db:5432/hsms
     ports:
       - "8177:8177"
+    networks:
+      - monitoring
     depends_on:
       - db
 
-#  prometheus:
-#    image: prom/prometheus:main
-#    ports:
-#      - "9090:9090"
-#    volumes:
-#      - ./prometheus/dev.prometheus.yml:/etc/prometheus/prometheus.yml
-#      - promdata:/prometheus
+  prometheus:
+    image: prom/prometheus:main
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
 
-#  grafana:
-#    image: grafana/grafana:main-ubuntu
-#    ports:
-#      - "3000:3000"
-#    volumes:
-#      - ./grafana/provisioning:/etc/grafana/provisioning
-#    depends_on:
-#      - prometheus
+  grafana:
+    image: grafana/grafana:main-ubuntu
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
 
   db:
     image: postgres:18.3
@@ -65,7 +57,16 @@ services:
       - pgdata:/var/lib/postgresql
     ports:
       - "5432:5432"
+    networks:
+      - monitoring
+
+
+configs:
+  prometheus_config:
+    file: prometheus/prometheus.yml
+
+networks:
+  monitoring:
 
 volumes:
   pgdata:
-#  promdata:
