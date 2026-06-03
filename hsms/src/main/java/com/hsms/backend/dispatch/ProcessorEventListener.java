@@ -1,10 +1,11 @@
-package com.hsms.backend.mission;
+package com.hsms.backend.dispatch;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+@Deprecated
 @Slf4j
 @Component
 class ProcessorEventListener {

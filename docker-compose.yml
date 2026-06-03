@@ -8,18 +8,35 @@ services:
 #    depends_on:
 #      - spring
 
+
+
+#  spring:
+#    build:
+#      context: hsms
+#      dockerfile: Dockerfile
+#    environment:
+#      - POSTGRES_USER
+#      - POSTGRES_PASSWORD
+#      - WGMGR_DB_CONN_STR=postgresql://db:5432/hsms
+#    ports:
+#      - "8177:8177"
+#    depends_on:
+#      - db
+
   spring:
-    build:
-      context: hsms
-      dockerfile: Dockerfile
+    image: maven:3.9.16-eclipse-temurin-17
+    working_dir: /app
+    volumes:
+      - ./hsms:/app
+    command: mvn spring-boot:run
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
-      - WGMGR_DB_CONN_STR=postgresql://db:5432/vpn
+      - WGMGR_DB_CONN_STR=postgresql://db:5432/hsms
     ports:
       - "8177:8177"
-#    depends_on:
-#      - db
+    depends_on:
+      - db
 
 #  prometheus:
 #    image: prom/prometheus:main
@@ -38,16 +55,18 @@ services:
 #    depends_on:
 #      - prometheus
 
-#  db:
-#    image: postgres:16
-#    environment:
-#      - POSTGRES_USER
-#      - POSTGRES_PASSWORD
-#      - POSTGRES_DB=vpn
-#    volumes:
-#      - ./postgres/initdb.d:/docker-entrypoint-initdb.d
-#      - pgdata:/var/lib/postgresql/data
+  db:
+    image: postgres:16.4
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB=hsms
+    volumes:
+      - ./postgres/initdb.d:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
-#volumes:
-#  pgdata:
+volumes:
+  pgdata:
 #  promdata:

@@ -1,4 +1,4 @@
 @NamedInterface
-package com.hsms.backend.mission.api;
+package com.hsms.backend.risk.api;
 
 import org.springframework.modulith.NamedInterface;
