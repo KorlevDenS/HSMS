@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/// Example controller to show communication between models
 @Slf4j
 @RestController
 @RequestMapping("/api")
