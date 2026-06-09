@@ -1,0 +1,3106 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8177",
+      "description": "Default local backend"
+    }
+  ],
+  "paths": {
+    "/api/v1/users": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/HsmsUserDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulation/desert-scenarios": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "runDesertSimulation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DesertSimulationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DesertSimulationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "missions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MissionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "createMission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MissionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/telemetry": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "telemetry",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TelemetryEventDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "submitTelemetry",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelemetryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/risk-cancel": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "riskCancelMission",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskCancelRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/risk-assessments": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "assessRisk",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskSnapshotDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/report": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "submitReport",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MissionReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/plan/ack": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "acknowledgePlan",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionPlanDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/launch": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "launchMission",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LaunchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/close": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "closeMission",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MissionCloseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/alarms": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "submitAlarm",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlarmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insurance-cases/{caseId}/reject-recalculation": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "rejectInsurance",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsuranceRejectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsuranceCaseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insurance-cases/{caseId}/recalculate": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "recalculateInsurance",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsuranceRecalculateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsuranceCaseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insurance-cases/{caseId}/close": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "closeInsurance",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsuranceCloseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsuranceCaseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/evacuation": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "issueEvacuation",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvacuationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvacuationCommandDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/evacuation/delivery-failed": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "markEvacuationDeliveryFailed",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvacuationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvacuationCommandDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/evacuation/delivered": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "markEvacuationDelivered",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvacuationCommandDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/evacuation/ack": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "acknowledgeEvacuation",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvacuationCommandDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/close": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "closeIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/harvesters": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "harvesters",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HarvesterDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "createHarvester",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HarvesterCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/HarvesterDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/crews": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "crews",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CrewDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "createCrew",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrewCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrewDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{userId}/roles": {
+      "patch": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "updateUserRoles",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRoleUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/HsmsUserDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk-policy": {
+      "patch": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "updateRiskPolicy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskPolicyUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskPolicyDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "mission",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "updateMission",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MissionPatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insurance-cases/{caseId}/terms": {
+      "patch": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "updateInsuranceTerms",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsuranceTermsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsuranceCaseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/classification": {
+      "patch": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "classifyIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "roles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/missions.csv": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "missionReportCsv",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/csv;charset=UTF-8": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/csv; charset=UTF-8": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/incidents.csv": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "incidentReportCsv",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/csv;charset=UTF-8": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/csv; charset=UTF-8": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/timeline": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "missionTimeline",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionTimelineDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/telemetry/latest": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "latestTelemetry",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryEventDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/missions/{missionId}/plan": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "missionPlan",
+        "parameters": [
+          {
+            "name": "missionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionPlanDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insurance-cases": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "insuranceCases",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InsuranceCaseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insurance-cases/{caseId}": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "insuranceCase",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsuranceCaseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insurance-cases/{caseId}/history": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "insuranceHistory",
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InsuranceRecalculationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "incident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/stream": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "events",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SseEmitter"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/queue": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "incidentQueue",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IncidentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/harvesters/{harvesterId}": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "harvester",
+        "parameters": [
+          {
+            "name": "harvesterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/HarvesterDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/harvesters/free": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "freeHarvesters",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HarvesterDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/operations": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "dashboard",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/crews/{crewId}": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "crew",
+        "parameters": [
+          {
+            "name": "crewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrewDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/crews/free": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "freeCrews",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CrewDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bootstrap": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "bootstrap",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BootstrapDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/HsmsUserDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit": {
+      "get": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "audit",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEventDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserCreateRequest": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "roles": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ROLE_SUPPLY_MANAGER",
+                "ROLE_HARVESTER_CREW",
+                "ROLE_INSURANCE_CONTOUR_OPERATOR",
+                "ROLE_SECURITY_HEADQUARTERS_OPERATOR",
+                "ROLE_ADMINISTRATOR",
+                "ROLE_OPERATIONS_MANAGEMENT"
+              ]
+            }
+          }
+        }
+      },
+      "HsmsUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "login": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "roles": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ROLE_SUPPLY_MANAGER",
+                "ROLE_HARVESTER_CREW",
+                "ROLE_INSURANCE_CONTOUR_OPERATOR",
+                "ROLE_SECURITY_HEADQUARTERS_OPERATOR",
+                "ROLE_ADMINISTRATOR",
+                "ROLE_OPERATIONS_MANAGEMENT"
+              ]
+            }
+          }
+        }
+      },
+      "DesertSimulationRequest": {
+        "type": "object",
+        "properties": {
+          "zoneId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "harvesterId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "crewId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "telemetryPoints": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "threatSeverity": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "includeAlarm": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AlarmResponse": {
+        "type": "object",
+        "properties": {
+          "alarmId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "incidentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "acknowledgement": {
+            "type": "string"
+          },
+          "incident": {
+            "$ref": "#/components/schemas/IncidentDto"
+          }
+        }
+      },
+      "DesertSimulationResult": {
+        "type": "object",
+        "properties": {
+          "mission": {
+            "$ref": "#/components/schemas/MissionDto"
+          },
+          "telemetry": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TelemetryEventDto"
+            }
+          },
+          "alarm": {
+            "$ref": "#/components/schemas/AlarmResponse"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/RiskSnapshotDto"
+          }
+        }
+      },
+      "EvacuationCommandDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "incidentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "missionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "SENT",
+              "DELIVERED",
+              "ACKNOWLEDGED",
+              "DELIVERY_FAILED",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sentBy": {
+            "type": "string"
+          },
+          "acknowledgedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acknowledgedBy": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deliveryError": {
+            "type": "string"
+          }
+        }
+      },
+      "IncidentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "missionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "alarmSignalId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLASSIFIED",
+              "EVACUATION_ORDERED",
+              "EVACUATION_ACKNOWLEDGED",
+              "MONITORING",
+              "CLOSED"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "classificationReason": {
+            "type": "string"
+          },
+          "slaStartedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "slaDeadlineAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "slaBreached": {
+            "type": "boolean"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedBy": {
+            "type": "string"
+          },
+          "evacuationCommand": {
+            "$ref": "#/components/schemas/EvacuationCommandDto"
+          }
+        }
+      },
+      "MissionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY_FOR_RISK",
+              "RISK_ASSESSED",
+              "ACTIVE",
+              "RISK_CANCELLED",
+              "CANCELLED",
+              "COMPLETED_PENDING_CLOSE",
+              "LOST",
+              "CLOSED"
+            ]
+          },
+          "zoneId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "zoneName": {
+            "type": "string"
+          },
+          "harvesterId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "harvesterName": {
+            "type": "string"
+          },
+          "crewId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "crewName": {
+            "type": "string"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actualStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closeReason": {
+            "type": "string"
+          },
+          "routeVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "route": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutePointDto"
+            }
+          },
+          "risk": {
+            "$ref": "#/components/schemas/RiskSnapshotDto"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/MissionPlanDto"
+          },
+          "report": {
+            "$ref": "#/components/schemas/MissionReportDto"
+          },
+          "incidentIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "insuranceCaseId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "closedBy": {
+            "type": "string"
+          },
+          "draftMissingFields": {
+            "type": "string"
+          },
+          "monitoringPriority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monitoringContext": {
+            "type": "string"
+          },
+          "riskReviewRequiredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "riskReviewReason": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MissionPlanDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "missionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "routeVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "safetyContact": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acknowledgedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acknowledgedBy": {
+            "type": "string"
+          }
+        }
+      },
+      "MissionReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "missionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "actualStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "spiceAmount": {
+            "type": "number"
+          },
+          "harvesterFinalStatus": {
+            "type": "string"
+          },
+          "abnormalSituations": {
+            "type": "string"
+          },
+          "submittedBy": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RiskSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "missionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "pAttack": {
+            "type": "number",
+            "format": "double"
+          },
+          "riskScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "launchAllowed": {
+            "type": "boolean"
+          },
+          "decisionZone": {
+            "type": "string",
+            "enum": [
+              "ALLOWED",
+              "WARNING",
+              "BLOCKING"
+            ]
+          },
+          "blockingReason": {
+            "type": "string"
+          },
+          "factors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "dataQuality": {
+            "type": "string",
+            "enum": [
+              "FRESH",
+              "DEGRADED",
+              "STALE"
+            ]
+          },
+          "calculatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validForRouteVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "staleReason": {
+            "type": "string"
+          }
+        }
+      },
+      "RoutePointDto": {
+        "type": "object",
+        "properties": {
+          "seqNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lat": {
+            "type": "number",
+            "format": "double"
+          },
+          "lon": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "TelemetryEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "externalEventId": {
+            "type": "string"
+          },
+          "missionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "crewId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lat": {
+            "type": "number",
+            "format": "double"
+          },
+          "lon": {
+            "type": "number",
+            "format": "double"
+          },
+          "equipmentStatus": {
+            "type": "string"
+          },
+          "eventTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "freshnessStatus": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "DUPLICATE",
+              "STALE",
+              "REJECTED"
+            ]
+          }
+        }
+      },
+      "MissionCreateRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "zoneId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "harvesterId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "crewId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "route": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutePointDto"
+            }
+          }
+        }
+      },
+      "TelemetryRequest": {
+        "type": "object",
+        "properties": {
+          "externalEventId": {
+            "type": "string"
+          },
+          "eventTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lat": {
+            "type": "number",
+            "format": "double"
+          },
+          "lon": {
+            "type": "number",
+            "format": "double"
+          },
+          "equipmentStatus": {
+            "type": "string"
+          }
+        }
+      },
+      "TelemetryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "DUPLICATE",
+              "STALE",
+              "REJECTED"
+            ]
+          },
+          "riskMarkedStale": {
+            "type": "boolean"
+          },
+          "event": {
+            "$ref": "#/components/schemas/TelemetryEventDto"
+          }
+        }
+      },
+      "RiskCancelRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "MissionReportRequest": {
+        "type": "object",
+        "properties": {
+          "actualStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actualEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "spiceAmount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "harvesterFinalStatus": {
+            "type": "string"
+          },
+          "abnormalSituations": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "actualStart",
+          "actualEnd",
+          "spiceAmount",
+          "harvesterFinalStatus",
+          "abnormalSituations"
+        ]
+      },
+      "LaunchRequest": {
+        "type": "object",
+        "properties": {
+          "confirmWarning": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "MissionCloseRequest": {
+        "type": "object",
+        "properties": {
+          "finalStatus": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY_FOR_RISK",
+              "RISK_ASSESSED",
+              "ACTIVE",
+              "RISK_CANCELLED",
+              "CANCELLED",
+              "COMPLETED_PENDING_CLOSE",
+              "LOST",
+              "CLOSED"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "AlarmRequest": {
+        "type": "object",
+        "properties": {
+          "externalEventId": {
+            "type": "string"
+          },
+          "eventTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "InsuranceRejectRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "InsuranceCaseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "missionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "incidentId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "WAITING_FOR_DATA",
+              "READY_FOR_RECALCULATION",
+              "RECALCULATED",
+              "TERMS_UPDATED",
+              "REJECTED",
+              "CLOSED"
+            ]
+          },
+          "triggerType": {
+            "type": "string",
+            "enum": [
+              "RISK_CANCELLATION",
+              "INCIDENT",
+              "SLA_BREACH",
+              "MISSION_LOSS",
+              "MISSION_CLOSE"
+            ]
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "openedBy": {
+            "type": "string"
+          },
+          "triggerReason": {
+            "type": "string"
+          },
+          "triggerPAttack": {
+            "type": "number",
+            "format": "double"
+          },
+          "triggerRiskScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "triggerRiskSnapshotId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "triggerDecisionAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "triggerDecisionBy": {
+            "type": "string"
+          },
+          "incidentSeverity": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "incidentRegisteredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "incidentClosedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "incidentSlaBreached": {
+            "type": "boolean"
+          },
+          "incidentOperator": {
+            "type": "string"
+          },
+          "missingData": {
+            "type": "string"
+          },
+          "finalRiskScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "finalPremium": {
+            "type": "number"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedBy": {
+            "type": "string"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InsuranceRecalculationDto"
+            }
+          }
+        }
+      },
+      "InsuranceRecalculationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "insuranceCaseId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "RECALCULATION",
+              "TERMS_UPDATED"
+            ]
+          },
+          "riskSnapshotId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "oldPremium": {
+            "type": "number"
+          },
+          "newPremium": {
+            "type": "number"
+          },
+          "oldRiskScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "newRiskScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "calculatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "calculatedBy": {
+            "type": "string"
+          },
+          "rejectedReason": {
+            "type": "string"
+          }
+        }
+      },
+      "InsuranceRecalculateRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "InsuranceCloseRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "EvacuationRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "HarvesterCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "BUSY",
+              "MAINTENANCE",
+              "LOST"
+            ]
+          },
+          "noiseLevel": {
+            "type": "number",
+            "format": "double"
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "HarvesterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "BUSY",
+              "MAINTENANCE",
+              "LOST"
+            ]
+          },
+          "noiseLevel": {
+            "type": "number",
+            "format": "double"
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CrewCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "BUSY",
+              "MAINTENANCE",
+              "LOST"
+            ]
+          },
+          "contactChannel": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assignedLogin": {
+            "type": "string"
+          }
+        }
+      },
+      "CrewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "BUSY",
+              "MAINTENANCE",
+              "LOST"
+            ]
+          },
+          "contactChannel": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assignedLogin": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/HsmsUserDto"
+          }
+        }
+      },
+      "UserRoleUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ROLE_SUPPLY_MANAGER",
+                "ROLE_HARVESTER_CREW",
+                "ROLE_INSURANCE_CONTOUR_OPERATOR",
+                "ROLE_SECURITY_HEADQUARTERS_OPERATOR",
+                "ROLE_ADMINISTRATOR",
+                "ROLE_OPERATIONS_MANAGEMENT"
+              ]
+            }
+          }
+        }
+      },
+      "RiskPolicyUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "warningThreshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "blockThreshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "formulaDescription": {
+            "type": "string"
+          }
+        }
+      },
+      "RiskPolicyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version": {
+            "type": "string"
+          },
+          "warningThreshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "blockThreshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "formulaDescription": {
+            "type": "string"
+          },
+          "activeFrom": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MissionPatchRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "zoneId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "harvesterId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "crewId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "plannedStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "plannedEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "route": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutePointDto"
+            }
+          }
+        }
+      },
+      "InsuranceTermsRequest": {
+        "type": "object",
+        "properties": {
+          "premium": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ClassificationRequest": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "RoleResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "AuditEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "actorLogin": {
+            "type": "string"
+          },
+          "actorRole": {
+            "type": "string",
+            "enum": [
+              "ROLE_SUPPLY_MANAGER",
+              "ROLE_HARVESTER_CREW",
+              "ROLE_INSURANCE_CONTOUR_OPERATOR",
+              "ROLE_SECURITY_HEADQUARTERS_OPERATOR",
+              "ROLE_ADMINISTRATOR",
+              "ROLE_OPERATIONS_MANAGEMENT"
+            ]
+          },
+          "action": {
+            "type": "string"
+          },
+          "objectType": {
+            "type": "string"
+          },
+          "objectId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "missionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "MissionTimelineDto": {
+        "type": "object",
+        "properties": {
+          "mission": {
+            "$ref": "#/components/schemas/MissionDto"
+          },
+          "telemetry": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TelemetryEventDto"
+            }
+          },
+          "incidents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IncidentDto"
+            }
+          },
+          "insuranceCase": {
+            "$ref": "#/components/schemas/InsuranceCaseDto"
+          },
+          "audit": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEventDto"
+            }
+          }
+        }
+      },
+      "SseEmitter": {
+        "type": "object",
+        "properties": {
+          "timeout": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "DashboardDto": {
+        "type": "object",
+        "properties": {
+          "activeMissions": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "closedMissions": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cancelledMissions": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "openIncidents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "slaBreaches": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "slaCompliancePercent": {
+            "type": "number",
+            "format": "double"
+          },
+          "averageReactionSeconds": {
+            "type": "number",
+            "format": "double"
+          },
+          "openInsuranceCases": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "averagePremium": {
+            "type": "number"
+          },
+          "incidentsBySeverity": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "periodFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodTo": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BootstrapDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/HsmsUserDto"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HsmsUserDto"
+            }
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MiningZoneDto"
+            }
+          },
+          "harvesters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HarvesterDto"
+            }
+          },
+          "crews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CrewDto"
+            }
+          },
+          "missions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MissionDto"
+            }
+          },
+          "incidents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IncidentDto"
+            }
+          },
+          "insuranceCases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InsuranceCaseDto"
+            }
+          },
+          "audit": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEventDto"
+            }
+          },
+          "activeRiskPolicy": {
+            "$ref": "#/components/schemas/RiskPolicyDto"
+          },
+          "dashboard": {
+            "$ref": "#/components/schemas/DashboardDto"
+          }
+        }
+      },
+      "MiningZoneDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "riskLevel": {
+            "type": "number",
+            "format": "double"
+          },
+          "coordinates": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
