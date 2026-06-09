@@ -1,45 +1,81 @@
 services:
-#  react:
-#    build: react
-#    environment:
-#      - BACKEND_BASE_URL=http://spring:8177/api
-#    ports:
-#      - "80:80"
-#    depends_on:
-#      - spring
-
+  react:
+    build:
+      context: ./react
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    image: hsms-frontend:local
+    restart: unless-stopped
+    depends_on:
+      spring:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5173/ >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - monitoring
 
   spring:
-    image: maven:3.9.16-eclipse-temurin-17
-    working_dir: /app
-    volumes:
-      - ./hsms:/app
-    command: mvn spring-boot:run
+    build:
+      context: ./hsms
+      dockerfile: Dockerfile
+    image: hsms-backend:local
+    restart: unless-stopped
     environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - WGMGR_DB_CONN_STR=postgresql://db:5432/hsms
-    ports:
-      - "8177:8177"
+      POSTGRES_USER: ${POSTGRES_USER:-hsms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hsms}
+      JDBC_DATABASE_URL: jdbc:postgresql://db:5432/hsms
+      JDBC_DRIVER: org.postgresql.Driver
+      HSMS_TOKEN_SECRET: ${HSMS_TOKEN_SECRET:?HSMS_TOKEN_SECRET must contain at least 32 characters}
+      HSMS_ALLOWED_ORIGINS: ${HSMS_ALLOWED_ORIGINS:-https://localhost:8443,https://127.0.0.1:8443}
+      HSMS_REQUIRE_HTTPS: ${HSMS_REQUIRE_HTTPS:-true}
+      HSMS_SSL_ENABLED: ${HSMS_SSL_ENABLED:-false}
     networks:
       - monitoring
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8177/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 20s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${HSMS_HTTPS_PORT:-8443}:8443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      react:
+        condition: service_healthy
+      spring:
+        condition: service_healthy
+    networks:
+      - monitoring
 
   prometheus:
     image: prom/prometheus:main
-    configs:
-      - source: prometheus_config
-        target: /etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
     ports:
-      - "9090:9090"
+      - "${HSMS_PROMETHEUS_PORT:-9090}:9090"
     networks:
       - monitoring
 
   grafana:
     image: grafana/grafana:main-ubuntu
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${HSMS_GRAFANA_PORT:-3000}:3000"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
@@ -48,25 +84,28 @@ services:
       - monitoring
 
   db:
-    image: postgres:18.3
+    image: postgres:16.4
+    restart: unless-stopped
     environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB=hsms
+      POSTGRES_USER: ${POSTGRES_USER:-hsms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hsms}
+      POSTGRES_DB: hsms
     volumes:
-      - pgdata:/var/lib/postgresql
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hsms} -d hsms"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     ports:
-      - "5432:5432"
+      - "${HSMS_POSTGRES_PORT:-5432}:5432"
     networks:
       - monitoring
-
-
-configs:
-  prometheus_config:
-    file: prometheus/prometheus.yml
 
 networks:
   monitoring:
 
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:

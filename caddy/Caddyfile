@@ -1,0 +1,46 @@
+https://localhost:8443 {
+	tls internal
+
+	handle /api/v1/incidents/stream {
+		reverse_proxy spring:8177 {
+			flush_interval -1
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
+
+	handle /api/v1/* {
+		reverse_proxy spring:8177 {
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
+
+	handle /v3/api-docs* {
+		reverse_proxy spring:8177 {
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
+
+	handle /swagger-ui* {
+		reverse_proxy spring:8177 {
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
+
+	handle /actuator/* {
+		reverse_proxy spring:8177 {
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
+
+	handle {
+		reverse_proxy react:5173 {
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
+}

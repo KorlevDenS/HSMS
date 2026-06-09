@@ -1,0 +1,81 @@
+groups:
+  - name: hsms-service-alerts
+    rules:
+      - alert: HsmsBackendUnavailable
+        expr: up{job="spring"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          module: backend
+        annotations:
+          summary: "HSMS backend unavailable"
+          description: "Spring backend has not been scrapeable for more than 30 seconds."
+
+      - alert: HsmsModuleHealthUnavailable
+        expr: hsms_module_health{module=~"common|mission|risk|security|insurance"} < 1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "HSMS module health-check failed"
+          description: "At least one documented HSMS module reports unhealthy status."
+
+      - alert: HsmsApiResponseTimeAboveTwoSeconds
+        expr: max(http_server_requests_seconds_max{job="spring"}) > 2
+        for: 1m
+        labels:
+          severity: warning
+          module: api
+        annotations:
+          summary: "HSMS API response time above 2 seconds"
+          description: "At least one API endpoint has exceeded the SRS response-time limit."
+
+      - alert: HsmsHighCpuUsage
+        expr: process_cpu_usage{job="spring"} > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          module: backend
+        annotations:
+          summary: "HSMS CPU usage above 80 percent"
+          description: "Backend process CPU usage is above the operational threshold."
+
+      - alert: HsmsServerErrors
+        expr: increase(http_server_requests_seconds_count{job="spring", status=~"5.."}[1m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          module: api
+        annotations:
+          summary: "HSMS server errors detected"
+          description: "The API returned 5xx responses during the last minute."
+
+      - alert: HsmsSlaBreaches
+        expr: increase(hsms_incidents_sla_breached_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          module: security
+        annotations:
+          summary: "HSMS incident SLA breach"
+          description: "At least one incident breached the normative response time."
+
+      - alert: HsmsOpenIncidentsBacklog
+        expr: hsms_incidents_open > 0
+        for: 5m
+        labels:
+          severity: warning
+          module: security
+        annotations:
+          summary: "HSMS open incidents backlog"
+          description: "Security queue has unresolved incidents for more than 5 minutes."
+
+      - alert: HsmsOpenInsuranceCasesBacklog
+        expr: hsms_insurance_cases_open > 0
+        for: 30m
+        labels:
+          severity: warning
+          module: insurance
+        annotations:
+          summary: "HSMS open insurance cases backlog"
+          description: "Insurance contour has unresolved cases for more than 30 minutes."
