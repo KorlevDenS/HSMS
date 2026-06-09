@@ -3,8 +3,6 @@
  * Risk Score is calculated automatically when getting all information
  * about mission.
  */
-
-
 @ApplicationModule
 package com.hsms.backend.risk;
 

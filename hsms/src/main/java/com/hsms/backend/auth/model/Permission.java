@@ -25,6 +25,4 @@ public class Permission {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "role", nullable = false)
     private Role role;
-
-
 }

@@ -1,5 +1,6 @@
 create table hsms_user (
                            id bigserial primary key,
+                           display_name varchar not null default '',
                            phone_number varchar not null,
                            email varchar not null,
                            login varchar unique not null,

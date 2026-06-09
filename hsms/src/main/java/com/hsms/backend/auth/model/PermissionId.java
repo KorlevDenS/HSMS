@@ -26,6 +26,4 @@ public class PermissionId implements Serializable {
     @NotNull
     @Column(name = "role", nullable = false)
     private Long role;
-
-
 }

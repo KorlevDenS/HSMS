@@ -1,21 +1,236 @@
 package com.hsms.backend.risk.service;
 
-import com.hsms.backend.dispatch.api.MissionResponse;
+import com.hsms.backend.auth.model.HsmsUser;
+import com.hsms.backend.common.HsmsAccessService;
+import com.hsms.backend.common.HsmsAuditService;
+import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.readmodel.HsmsDtoAssembler;
 import com.hsms.backend.risk.api.RiskApi;
-import com.hsms.backend.risk.api.RiskScoreResponse;
+import com.hsms.backend.risk.model.RiskPolicy;
+import com.hsms.backend.risk.model.RiskScore;
+import com.hsms.backend.risk.repository.RiskPolicyRepository;
+import com.hsms.backend.risk.repository.RiskScoreRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static com.hsms.backend.common.HsmsOps.*;
 
 @Service
+@Transactional
 public class RiskScoreService implements RiskApi {
 
-    @Override
-    public RiskScoreResponse calcRiskScore(MissionResponse missionResponse) {
-        return null;
+    private final HsmsAccessService access;
+    private final HsmsAuditService audit;
+    private final HsmsDtoAssembler dto;
+    private final RiskPolicyRepository riskPolicyRepository;
+    private final RiskScoreRepository riskScoreRepository;
+    private final MeterRegistry meterRegistry;
+
+    public RiskScoreService(
+            HsmsAccessService access,
+            HsmsAuditService audit,
+            HsmsDtoAssembler dto,
+            RiskPolicyRepository riskPolicyRepository,
+            RiskScoreRepository riskScoreRepository,
+            MeterRegistry meterRegistry
+    ) {
+        this.access = access;
+        this.audit = audit;
+        this.dto = dto;
+        this.riskPolicyRepository = riskPolicyRepository;
+        this.riskScoreRepository = riskScoreRepository;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
-    public RiskScoreResponse getRiskScoreById(Long riskScoreId) {
-        return null;
+    public RiskSnapshotDto assessRisk(String actorLogin, long missionId) {
+        HsmsUser actor = access.requireAny(actorLogin, RoleCode.ROLE_SUPPLY_MANAGER, RoleCode.ROLE_ADMINISTRATOR, RoleCode.ROLE_SECURITY_HEADQUARTERS_OPERATOR);
+        RiskScore risk = calculateAndPersist(missionId, false);
+        meterRegistry.counter("hsms_risk_assessments_total").increment();
+        audit.record(actor, "RISK_ASSESSED", "risk_snapshot", risk.getId(), missionId, Map.of(
+                "riskScore", risk.getRiskScore(),
+                "pAttack", risk.getPAttack(),
+                "decisionZone", risk.getDecisionZone().name()
+        ));
+        return dto.risk(risk.getId());
     }
 
+    @Override
+    public RiskPolicyDto updateRiskPolicy(String actorLogin, RiskPolicyUpdateRequest request) {
+        HsmsUser actor = access.requireAny(actorLogin, RoleCode.ROLE_ADMINISTRATOR);
+        RiskPolicyDto active = dto.activeRiskPolicy();
+        int warning = request == null || request.warningThreshold() == null ? active.warningThreshold() : request.warningThreshold();
+        int block = request == null || request.blockThreshold() == null ? active.blockThreshold() : request.blockThreshold();
+        if (warning < 0 || warning > 100 || block < 0 || block > 100 || warning >= block) {
+            throw badRequest("Пороговые значения риска заполнены неверно", "Укажите warningThreshold меньше blockThreshold в диапазоне 0–100.");
+        }
+
+        riskPolicyRepository.findByActiveTrue().forEach(policy -> policy.setActive(false));
+        Instant now = Instant.now();
+        RiskPolicy policy = new RiskPolicy();
+        policy.setVersion(blankToDefault(request == null ? null : request.version(), "policy-" + now.toEpochMilli()));
+        policy.setWarningThreshold(warning);
+        policy.setBlockThreshold(block);
+        policy.setFormulaDescription(blankToDefault(request == null ? null : request.formulaDescription(), active.formulaDescription()));
+        policy.setActiveFrom(now);
+        policy.setActive(true);
+        RiskPolicy saved = riskPolicyRepository.saveAndFlush(policy);
+        audit.record(actor, "RISK_POLICY_UPDATED", "risk_policy", saved.getId(), null, Map.of(
+                "owner", actor.getLogin(),
+                "reason", "Административное изменение политики риска",
+                "previousVersion", active.version(),
+                "previousWarningThreshold", active.warningThreshold(),
+                "previousBlockThreshold", active.blockThreshold(),
+                "previousFormulaDescription", active.formulaDescription(),
+                "newVersion", saved.getVersion(),
+                "newWarningThreshold", warning,
+                "newBlockThreshold", block,
+                "newFormulaDescription", saved.getFormulaDescription()
+        ));
+        return dto.activeRiskPolicy();
+    }
+
+    @Override
+    public void markRiskStaleAfterDomainChange(String actorLogin, long missionId, String reason) {
+        HsmsUser actor = access.requireUser(actorLogin);
+        String staleReason = blankToDefault(reason, "Изменились факторы риска");
+        int marked = markOpenRiskSnapshotsStale(missionId, staleReason);
+        audit.record(actor, "RISK_MARKED_STALE", "mission", missionId, missionId, Map.of(
+                "reason", staleReason,
+                "markedSnapshots", marked
+        ));
+    }
+
+    @Override
+    public RiskSnapshotDto recalculateAfterDomainChange(String actorLogin, long missionId, String reason, boolean includeIncidentPenalty) {
+        HsmsUser actor = access.requireUser(actorLogin);
+        String staleReason = blankToDefault(reason, "Изменились факторы риска");
+        markOpenRiskSnapshotsStale(missionId, staleReason);
+        RiskScore risk = calculateAndPersist(missionId, includeIncidentPenalty);
+        audit.record(actor, "RISK_RECALCULATED_AFTER_CHANGE", "risk_snapshot", risk.getId(), missionId, Map.of(
+                "reason", staleReason,
+                "riskScore", risk.getRiskScore(),
+                "decisionZone", risk.getDecisionZone().name()
+        ));
+        return dto.risk(risk.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RiskSnapshotDto latestRisk(long missionId) {
+        return dto.latestRisk(missionId)
+                .orElseThrow(() -> notFound("Снимок риска не найден", "Повторите расчет риска."));
+    }
+
+    private RiskScore calculateAndPersist(long missionId, boolean includeIncidentPenalty) {
+        MissionDto mission = dto.mission(missionId);
+        requireCompleteMissionForRisk(mission);
+        requireRoute(mission.route());
+        MiningZoneDto zone = dto.requireZone(mission.zoneId());
+        HarvesterDto harvester = dto.requireHarvester(mission.harvesterId());
+        RiskPolicy policy = dto.activeRiskPolicyEntity();
+        TelemetryEventDto latestTelemetry = dto.latestAcceptedTelemetry(missionId).orElse(null);
+
+        double zoneRiskLevel = zone.riskLevel();
+        double harvesterNoiseLevel = harvester.noiseLevel();
+        double timeWindowRisk = timeWindowRisk(mission.plannedStart());
+        double routeComplexity = Math.min(1.0, Math.max(0.0, mission.route().size() / 10.0));
+        double equipmentRisk = latestTelemetry == null
+                ? (harvester.status() == ResourceStatus.MAINTENANCE ? 0.8 : 0.1)
+                : equipmentRisk(latestTelemetry.equipmentStatus());
+        double telemetryPenalty = latestTelemetry == null
+                ? (mission.status() == MissionStatus.ACTIVE ? 0.25 : 0.0)
+                : (latestTelemetry.freshnessStatus() == FreshnessStatus.ACCEPTED ? 0.0 : 0.35);
+        double incidentPenalty = includeIncidentPenalty || !mission.incidentIds().isEmpty() ? 0.75 : 0.0;
+
+        double pAttack = clamp(0.10
+                + zoneRiskLevel * 0.35
+                + harvesterNoiseLevel * 0.20
+                + timeWindowRisk * 0.15
+                + routeComplexity * 0.10
+                + telemetryPenalty * 0.10);
+        int riskScoreValue = (int) Math.round(pAttack * 70
+                + equipmentRisk * 10
+                + telemetryPenalty * 10
+                + incidentPenalty * 10);
+        riskScoreValue = Math.max(0, Math.min(100, riskScoreValue));
+        DecisionZone decisionZone = riskScoreValue >= policy.getBlockThreshold()
+                ? DecisionZone.BLOCKING
+                : riskScoreValue >= policy.getWarningThreshold() ? DecisionZone.WARNING : DecisionZone.ALLOWED;
+        DataQuality quality = telemetryPenalty >= 0.25 ? DataQuality.DEGRADED : DataQuality.FRESH;
+
+        Instant now = Instant.now();
+        RiskScore risk = new RiskScore();
+        risk.setMissionId(missionId);
+        risk.setPolicyVersion(policy.getVersion());
+        risk.setPAttack(round(pAttack));
+        risk.setRiskScore(riskScoreValue);
+        risk.setLaunchAllowed(decisionZone != DecisionZone.BLOCKING);
+        risk.setDecisionZone(decisionZone);
+        risk.setBlockingReason(decisionZone == DecisionZone.BLOCKING ? "Risk-score выше блокирующего порога" : "");
+        risk.setDataQuality(quality);
+        risk.setCalculatedAt(now);
+        risk.setValidForRouteVersion(mission.routeVersion());
+        risk.setStale(false);
+
+        Map<String, Double> factors = new LinkedHashMap<>();
+        factors.put("zoneRiskLevel", round(zoneRiskLevel));
+        factors.put("harvesterNoiseLevel", round(harvesterNoiseLevel));
+        factors.put("timeWindowRisk", round(timeWindowRisk));
+        factors.put("routeComplexity", round(routeComplexity));
+        factors.put("equipmentRisk", round(equipmentRisk));
+        factors.put("telemetryQualityPenalty", round(telemetryPenalty));
+        factors.put("incidentPenalty", round(incidentPenalty));
+        factors.forEach(risk::addFactor);
+        return riskScoreRepository.saveAndFlush(risk);
+    }
+
+    private int markOpenRiskSnapshotsStale(long missionId, String staleReason) {
+        var snapshots = riskScoreRepository.findByMissionIdAndStaleFalse(missionId);
+        snapshots.forEach(risk -> {
+            risk.setStale(true);
+            risk.setStaleReason(staleReason);
+        });
+        return snapshots.size();
+    }
+
+    private void requireCompleteMissionForRisk(MissionDto mission) {
+        if (mission.zoneId() == null
+                || mission.harvesterId() == null
+                || mission.crewId() == null
+                || mission.plannedStart() == null
+                || mission.plannedEnd() == null) {
+            throw badRequest("Рейс не готов к расчету риска", "Заполните обязательные параметры черновика: название, зона, харвестер, экипаж и плановое окно.");
+        }
+    }
+
+    private double timeWindowRisk(Instant plannedStart) {
+        if (plannedStart == null) {
+            return 0.5;
+        }
+        int hour = plannedStart.atZone(java.time.ZoneOffset.UTC).getHour();
+        if (hour >= 10 && hour <= 16) {
+            return 0.7;
+        }
+        if (hour >= 4 && hour <= 8) {
+            return 0.25;
+        }
+        return 0.45;
+    }
+
+    private double equipmentRisk(String status) {
+        String normalized = blankToDefault(status, "NORMAL").toUpperCase();
+        if (normalized.contains("CRITICAL") || normalized.contains("DAMAGED") || normalized.contains("ПОВРЕЖ")) {
+            return 0.9;
+        }
+        if (normalized.contains("WARN") || normalized.contains("DEGRADED")) {
+            return 0.5;
+        }
+        return 0.1;
+    }
 }

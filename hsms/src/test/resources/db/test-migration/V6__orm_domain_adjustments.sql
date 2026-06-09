@@ -1,0 +1,3 @@
+ALTER TABLE incident ALTER COLUMN alarm_signal_id DROP NOT NULL;
+
+ALTER TABLE risk_snapshot ADD COLUMN IF NOT EXISTS stale_reason VARCHAR(1000);

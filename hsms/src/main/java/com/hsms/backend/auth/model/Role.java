@@ -27,6 +27,4 @@ public class Role {
     @JsonIgnore
     @ManyToMany(mappedBy = "roles")
     private Set<HsmsUser> hsmsUsers = new LinkedHashSet<>();
-
-
 }

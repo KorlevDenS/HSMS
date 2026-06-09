@@ -21,6 +21,10 @@ public class HsmsUser {
     private Long id;
 
     @NotNull
+    @Column(name = "display_name", nullable = false, length = Integer.MAX_VALUE)
+    private String displayName;
+
+    @NotNull
     @Column(name = "phone_number", nullable = false, length = Integer.MAX_VALUE)
     private String phoneNumber;
 
@@ -37,8 +41,11 @@ public class HsmsUser {
     private String password;
 
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "permission",
+            joinColumns = @JoinColumn(name = "client"),
+            inverseJoinColumns = @JoinColumn(name = "role")
+    )
     private Set<Role> roles = new LinkedHashSet<>();
-
-
 }
