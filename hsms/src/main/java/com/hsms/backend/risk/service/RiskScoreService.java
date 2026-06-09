@@ -9,7 +9,12 @@ import org.springframework.stereotype.Service;
 public class RiskScoreService implements RiskApi {
 
     @Override
-    public RiskScoreResponse calcRisk(MissionResponse missionResponse) {
+    public RiskScoreResponse calcRiskScore(MissionResponse missionResponse) {
+        return null;
+    }
+
+    @Override
+    public RiskScoreResponse getRiskScoreById(Long riskScoreId) {
         return null;
     }
 
