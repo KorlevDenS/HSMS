@@ -3,3 +3,9 @@
 .vscode
 
 .idea
+
+.playwright-cli/
+output/playwright/
+
+react/node_modules/
+react/dist/
