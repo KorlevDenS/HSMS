@@ -1,14 +1,19 @@
 package com.hsms.backend.security.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hsms.backend.common.HsmsDomain.RoleCode;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
@@ -24,20 +29,28 @@ public class HsmsTokenService {
     private static final String HMAC = "HmacSHA256";
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder DECODER = Base64.getUrlDecoder();
+    private static final TypeReference<Map<String, Object>> JWT_MAP_TYPE = new JwtMapTypeReference();
 
     private final String secret;
     private final long ttlSeconds;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private static final class JwtMapTypeReference extends TypeReference<Map<String, Object>> {
+    }
+
     public HsmsTokenService(
             @Value("${hsms.security.token-secret}") String secret,
             @Value("${hsms.security.token-ttl-seconds:28800}") long ttlSeconds
     ) {
+        this.secret = secret;
+        this.ttlSeconds = ttlSeconds;
+    }
+
+    @PostConstruct
+    void validateConfiguration() {
         if (secret == null || secret.length() < 32) {
             throw new IllegalStateException("HSMS_TOKEN_SECRET must contain at least 32 characters");
         }
-        this.secret = secret;
-        this.ttlSeconds = ttlSeconds;
     }
 
     public String issue(HsmsPrincipal principal) {
@@ -90,16 +103,15 @@ public class HsmsTokenService {
     private String encodeJson(Map<String, ?> value) {
         try {
             return ENCODER.encodeToString(objectMapper.writeValueAsBytes(value));
-        } catch (Exception error) {
+        } catch (JsonProcessingException error) {
             throw new IllegalStateException("Cannot encode JWT", error);
         }
     }
 
     private Map<String, Object> decodeJson(String value) {
         try {
-            return objectMapper.readValue(DECODER.decode(value), new TypeReference<>() {
-            });
-        } catch (Exception error) {
+            return objectMapper.readValue(DECODER.decode(value), JWT_MAP_TYPE);
+        } catch (IOException | IllegalArgumentException error) {
             throw new IllegalArgumentException("JWT JSON is invalid", error);
         }
     }
@@ -120,7 +132,7 @@ public class HsmsTokenService {
             Mac mac = Mac.getInstance(HMAC);
             mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC));
             return ENCODER.encodeToString(mac.doFinal(value.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception error) {
+        } catch (InvalidKeyException | NoSuchAlgorithmException error) {
             throw new IllegalStateException("Cannot sign HSMS token", error);
         }
     }

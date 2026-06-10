@@ -27,4 +27,15 @@ public class Role {
     @JsonIgnore
     @ManyToMany(mappedBy = "roles")
     private Set<HsmsUser> hsmsUsers = new LinkedHashSet<>();
+
+    public Set<HsmsUser> getHsmsUsers() {
+        return Set.copyOf(hsmsUsers);
+    }
+
+    public void setHsmsUsers(Set<HsmsUser> hsmsUsers) {
+        this.hsmsUsers.clear();
+        if (hsmsUsers != null) {
+            this.hsmsUsers.addAll(hsmsUsers);
+        }
+    }
 }

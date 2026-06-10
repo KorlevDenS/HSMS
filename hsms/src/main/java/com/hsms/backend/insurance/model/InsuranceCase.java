@@ -104,6 +104,17 @@ public class InsuranceCase {
     @OneToMany(mappedBy = "insuranceCase", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InsuranceRecalculation> recalculations = new ArrayList<>();
 
+    public List<InsuranceRecalculation> getRecalculations() {
+        return List.copyOf(recalculations);
+    }
+
+    public void setRecalculations(List<InsuranceRecalculation> recalculations) {
+        this.recalculations.clear();
+        if (recalculations != null) {
+            recalculations.forEach(this::addRecalculation);
+        }
+    }
+
     public void addRecalculation(InsuranceRecalculation recalculation) {
         recalculation.setInsuranceCase(this);
         recalculations.add(recalculation);

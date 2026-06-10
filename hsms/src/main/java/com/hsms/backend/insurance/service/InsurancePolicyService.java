@@ -3,7 +3,23 @@ package com.hsms.backend.insurance.service;
 import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.IncidentDto;
+import com.hsms.backend.common.HsmsDomain.IncidentStatus;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseOpenRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceCloseRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceHistoryEvent;
+import com.hsms.backend.common.HsmsDomain.InsuranceRecalculateRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceRecalculationDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceRejectRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceStatus;
+import com.hsms.backend.common.HsmsDomain.InsuranceTermsRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceTrigger;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
+import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.HsmsDomain.Severity;
 import com.hsms.backend.insurance.api.InsuranceApi;
 import com.hsms.backend.insurance.model.InsuranceCase;
 import com.hsms.backend.insurance.model.InsuranceRecalculation;
@@ -11,6 +27,7 @@ import com.hsms.backend.insurance.repository.InsuranceCaseRepository;
 import com.hsms.backend.insurance.repository.InsuranceRecalculationRepository;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
 import com.hsms.backend.risk.api.RiskApi;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +51,7 @@ public class InsurancePolicyService implements InsuranceApi {
     private final InsuranceCaseRepository insuranceCaseRepository;
     private final InsuranceRecalculationRepository insuranceRecalculationRepository;
     private final RiskApi riskApi;
-    private final MeterRegistry meterRegistry;
+    private final Counter insuranceRecalculations;
 
     public InsurancePolicyService(
             HsmsAccessService access,
@@ -51,7 +68,7 @@ public class InsurancePolicyService implements InsuranceApi {
         this.insuranceCaseRepository = insuranceCaseRepository;
         this.insuranceRecalculationRepository = insuranceRecalculationRepository;
         this.riskApi = riskApi;
-        this.meterRegistry = meterRegistry;
+        this.insuranceRecalculations = meterRegistry.counter("hsms_insurance_recalculations_total");
     }
 
     @Override
@@ -140,7 +157,7 @@ public class InsurancePolicyService implements InsuranceApi {
         insurance.setMissingData(null);
         insuranceCaseRepository.saveAndFlush(insurance);
 
-        meterRegistry.counter("hsms_insurance_recalculations_total").increment();
+        insuranceRecalculations.increment();
         audit.record(actor, "INSURANCE_RECALCULATED", "insurance_case", caseId, insurance.getMissionId(), Map.of(
                 "premium", newPremium,
                 "riskScore", risk.riskScore()

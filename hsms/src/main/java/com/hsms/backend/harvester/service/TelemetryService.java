@@ -2,6 +2,8 @@ package com.hsms.backend.harvester.service;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
+
 import static com.hsms.backend.common.HsmsOps.blankToDefault;
 import static com.hsms.backend.common.HsmsOps.badRequest;
 
@@ -9,7 +11,7 @@ import static com.hsms.backend.common.HsmsOps.badRequest;
 public class TelemetryService {
 
     public String normalizeEquipmentStatus(String status) {
-        return blankToDefault(status, "NORMAL").trim().toUpperCase();
+        return blankToDefault(status, "NORMAL").trim().toUpperCase(Locale.ROOT);
     }
 
     public void validateCoordinates(double lat, double lon) {

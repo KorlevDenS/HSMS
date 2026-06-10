@@ -1,6 +1,29 @@
 package com.hsms.backend.readmodel;
 
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.AuditEventDto;
+import com.hsms.backend.common.HsmsDomain.CrewDto;
+import com.hsms.backend.common.HsmsDomain.DashboardDto;
+import com.hsms.backend.common.HsmsDomain.EvacuationCommandDto;
+import com.hsms.backend.common.HsmsDomain.FreshnessStatus;
+import com.hsms.backend.common.HsmsDomain.HarvesterDto;
+import com.hsms.backend.common.HsmsDomain.IncidentDto;
+import com.hsms.backend.common.HsmsDomain.IncidentStatus;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceHistoryEvent;
+import com.hsms.backend.common.HsmsDomain.InsuranceRecalculationDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceStatus;
+import com.hsms.backend.common.HsmsDomain.MiningZoneDto;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.MissionPlanDto;
+import com.hsms.backend.common.HsmsDomain.MissionReportDto;
+import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.HsmsDomain.MissionTimelineDto;
+import com.hsms.backend.common.HsmsDomain.ResourceStatus;
+import com.hsms.backend.common.HsmsDomain.RiskPolicyDto;
+import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
+import com.hsms.backend.common.HsmsDomain.RoutePointDto;
+import com.hsms.backend.common.HsmsDomain.Severity;
+import com.hsms.backend.common.HsmsDomain.TelemetryEventDto;
 import com.hsms.backend.common.model.AuditDetail;
 import com.hsms.backend.common.model.AuditEvent;
 import com.hsms.backend.common.model.MiningZone;
@@ -23,12 +46,10 @@ import com.hsms.backend.mission.model.MissionPlan;
 import com.hsms.backend.mission.model.MissionRoute;
 import com.hsms.backend.mission.repository.MissionPlanRepository;
 import com.hsms.backend.mission.repository.MissionRepository;
-import com.hsms.backend.risk.model.RiskFactor;
 import com.hsms.backend.risk.model.RiskPolicy;
 import com.hsms.backend.risk.model.RiskScore;
 import com.hsms.backend.risk.repository.RiskPolicyRepository;
 import com.hsms.backend.risk.repository.RiskScoreRepository;
-import com.hsms.backend.security.model.AlarmSignal;
 import com.hsms.backend.security.model.EvacuationCommand;
 import com.hsms.backend.security.model.Incident;
 import com.hsms.backend.security.repository.AlarmSignalRepository;
@@ -330,7 +351,7 @@ public class HsmsDtoAssembler {
         long openIncidents = periodIncidents.stream().filter(incident -> incident.status() != IncidentStatus.CLOSED).count();
         long slaBreaches = periodIncidents.stream().filter(IncidentDto::slaBreached).count();
         long totalIncidents = periodIncidents.size();
-        double compliance = totalIncidents == 0 ? 100.0 : ((double) (totalIncidents - slaBreaches) / totalIncidents) * 100.0;
+        double compliance = totalIncidents == 0 ? 100.0 : (double) (totalIncidents - slaBreaches) / totalIncidents * 100.0;
         double avgReaction = periodIncidents.stream()
                 .filter(incident -> incident.closedAt() != null)
                 .mapToLong(incident -> Duration.between(incident.slaStartedAt(), incident.closedAt()).toSeconds())

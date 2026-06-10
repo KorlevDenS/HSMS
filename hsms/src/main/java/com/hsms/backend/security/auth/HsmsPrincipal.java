@@ -13,6 +13,15 @@ public record HsmsPrincipal(
         String displayName,
         Set<RoleCode> roles
 ) {
+    public HsmsPrincipal {
+        roles = roles == null ? Set.of() : Set.copyOf(roles);
+    }
+
+    @Override
+    public Set<RoleCode> roles() {
+        return Set.copyOf(roles);
+    }
+
     public Collection<? extends GrantedAuthority> authorities() {
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.name()))

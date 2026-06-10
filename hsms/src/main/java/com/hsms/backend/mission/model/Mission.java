@@ -113,6 +113,14 @@ public class Mission {
     @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MissionRoute> route = new ArrayList<>();
 
+    public List<MissionRoute> getRoute() {
+        return List.copyOf(route);
+    }
+
+    public void setRoute(List<MissionRoute> route) {
+        replaceRoute(route == null ? List.of() : route);
+    }
+
     public void clearRoute() {
         route.clear();
     }

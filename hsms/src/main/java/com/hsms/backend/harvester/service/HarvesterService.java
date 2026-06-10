@@ -3,7 +3,18 @@ package com.hsms.backend.harvester.service;
 import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.CrewCreateRequest;
+import com.hsms.backend.common.HsmsDomain.CrewDto;
+import com.hsms.backend.common.HsmsDomain.FreshnessStatus;
+import com.hsms.backend.common.HsmsDomain.HarvesterCreateRequest;
+import com.hsms.backend.common.HsmsDomain.HarvesterDto;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.HsmsDomain.ResourceStatus;
+import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.HsmsDomain.TelemetryEventDto;
+import com.hsms.backend.common.HsmsDomain.TelemetryRequest;
+import com.hsms.backend.common.HsmsDomain.TelemetryResponse;
 import com.hsms.backend.harvester.api.HarvesterApi;
 import com.hsms.backend.harvester.model.Crew;
 import com.hsms.backend.harvester.model.Harvester;
@@ -14,12 +25,14 @@ import com.hsms.backend.harvester.repository.TelemetryEventRepository;
 import com.hsms.backend.mission.model.Mission;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
 import com.hsms.backend.risk.api.RiskApi;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static com.hsms.backend.common.HsmsOps.*;
@@ -35,7 +48,8 @@ public class HarvesterService implements HarvesterApi {
     private final CrewRepository crewRepository;
     private final TelemetryEventRepository telemetryEventRepository;
     private final RiskApi riskApi;
-    private final MeterRegistry meterRegistry;
+    private final Counter duplicateTelemetry;
+    private final Counter receivedTelemetry;
     private final TelemetryService telemetryService;
 
     public HarvesterService(
@@ -56,7 +70,8 @@ public class HarvesterService implements HarvesterApi {
         this.crewRepository = crewRepository;
         this.telemetryEventRepository = telemetryEventRepository;
         this.riskApi = riskApi;
-        this.meterRegistry = meterRegistry;
+        this.duplicateTelemetry = meterRegistry.counter("hsms_telemetry_duplicate_total");
+        this.receivedTelemetry = meterRegistry.counter("hsms_telemetry_received_total");
         this.telemetryService = telemetryService;
     }
 
@@ -166,7 +181,7 @@ public class HarvesterService implements HarvesterApi {
         String externalEventId = request.externalEventId().trim();
         var existing = dto.telemetryByExternalId(missionId, externalEventId);
         if (existing.isPresent()) {
-            meterRegistry.counter("hsms_telemetry_duplicate_total").increment();
+            duplicateTelemetry.increment();
             return new TelemetryResponse(existing.get().id(), FreshnessStatus.DUPLICATE, false, existing.get());
         }
 
@@ -189,7 +204,7 @@ public class HarvesterService implements HarvesterApi {
         event.setProcessedAt(now);
         event.setFreshnessStatus(freshness);
         TelemetryEvent saved = telemetryEventRepository.saveAndFlush(event);
-        meterRegistry.counter("hsms_telemetry_received_total").increment();
+        receivedTelemetry.increment();
 
         boolean riskMarkedStale = false;
         TelemetryEventDto savedDto = dto.telemetryByExternalId(missionId, externalEventId).orElseThrow();
@@ -240,7 +255,7 @@ public class HarvesterService implements HarvesterApi {
     }
 
     private int monitoringPriority(String equipmentStatus) {
-        String normalized = blankToDefault(equipmentStatus, "NORMAL").toUpperCase();
+        String normalized = blankToDefault(equipmentStatus, "NORMAL").toUpperCase(Locale.ROOT);
         if (normalized.contains("CRITICAL") || normalized.contains("DAMAGED") || normalized.contains("ПОВРЕЖ")) {
             return 90;
         }

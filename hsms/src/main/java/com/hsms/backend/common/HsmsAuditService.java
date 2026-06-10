@@ -4,6 +4,7 @@ import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.common.HsmsDomain.RoleCode;
 import com.hsms.backend.common.model.AuditEvent;
 import com.hsms.backend.common.repository.AuditEventRepository;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class HsmsAuditService {
 
     private final AuditEventRepository auditEventRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final MeterRegistry meterRegistry;
+    private final Counter auditEvents;
 
     public HsmsAuditService(
             AuditEventRepository auditEventRepository,
@@ -27,7 +28,7 @@ public class HsmsAuditService {
     ) {
         this.auditEventRepository = auditEventRepository;
         this.eventPublisher = eventPublisher;
-        this.meterRegistry = meterRegistry;
+        this.auditEvents = meterRegistry.counter("hsms_audit_events_total");
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -48,7 +49,7 @@ public class HsmsAuditService {
             details.forEach((key, value) -> event.addDetail(key, value == null ? "" : value));
         }
         auditEventRepository.save(event);
-        meterRegistry.counter("hsms_audit_events_total").increment();
+        auditEvents.increment();
         eventPublisher.publishEvent(new HsmsDomainEvent(action, objectType, objectId, missionId));
     }
 }

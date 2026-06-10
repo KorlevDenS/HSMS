@@ -1,6 +1,14 @@
 package com.hsms.backend.api_gateway;
 
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.IncidentDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseOpenRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceTrigger;
+import com.hsms.backend.common.HsmsDomain.MissionCloseRequest;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.MissionPatchRequest;
+import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.HsmsDomain.RiskCancelRequest;
+import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
 import com.hsms.backend.insurance.api.InsuranceApi;
 import com.hsms.backend.mission.api.MissionApi;
 import com.hsms.backend.risk.api.RiskApi;

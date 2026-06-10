@@ -32,35 +32,39 @@ public class SecurityConfiguration {
             HsmsAuthenticationFilter authenticationFilter,
             HttpsEnforcementFilter httpsEnforcementFilter,
             CorsConfigurationSource corsConfigurationSource
-    ) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(errors -> errors
-                        .authenticationEntryPoint((request, response, exception) -> {
-                            response.setStatus(401);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("""
-                                    {"message":"Требуется вход в систему","action":"Войдите пользователем с подходящей ролью.","status":401}
-                                    """);
-                        })
-                        .accessDeniedHandler((request, response, exception) -> {
-                            response.setStatus(403);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("""
-                                    {"message":"Недостаточно прав для операции","action":"Войдите пользователем с подходящей ролью.","status":403}
-                                    """);
-                        })
-                )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                        .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(httpsEnforcementFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+    ) {
+        try {
+            return http
+                    .csrf(AbstractHttpConfigurer::disable)
+                    .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .exceptionHandling(errors -> errors
+                            .authenticationEntryPoint((request, response, exception) -> {
+                                response.setStatus(401);
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.getWriter().write("""
+                                        {"message":"Требуется вход в систему","action":"Войдите пользователем с подходящей ролью.","status":401}
+                                        """);
+                            })
+                            .accessDeniedHandler((request, response, exception) -> {
+                                response.setStatus(403);
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.getWriter().write("""
+                                        {"message":"Недостаточно прав для операции","action":"Войдите пользователем с подходящей ролью.","status":403}
+                                        """);
+                            })
+                    )
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                            .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                            .anyRequest().authenticated()
+                    )
+                    .addFilterBefore(httpsEnforcementFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                    .build();
+        } catch (Exception error) {
+            throw new IllegalStateException("Cannot configure HSMS security filter chain", error);
+        }
     }
 
     @Bean

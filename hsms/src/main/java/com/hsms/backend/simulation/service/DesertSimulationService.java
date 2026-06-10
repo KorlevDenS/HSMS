@@ -1,7 +1,21 @@
 package com.hsms.backend.simulation.service;
 
 import com.hsms.backend.common.HsmsAccessService;
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.AlarmRequest;
+import com.hsms.backend.common.HsmsDomain.AlarmResponse;
+import com.hsms.backend.common.HsmsDomain.ClassificationRequest;
+import com.hsms.backend.common.HsmsDomain.DesertSimulationRequest;
+import com.hsms.backend.common.HsmsDomain.DesertSimulationResult;
+import com.hsms.backend.common.HsmsDomain.LaunchRequest;
+import com.hsms.backend.common.HsmsDomain.MissionCreateRequest;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
+import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.HsmsDomain.RoutePointDto;
+import com.hsms.backend.common.HsmsDomain.Severity;
+import com.hsms.backend.common.HsmsDomain.TelemetryEventDto;
+import com.hsms.backend.common.HsmsDomain.TelemetryRequest;
+import com.hsms.backend.common.HsmsDomain.TelemetryResponse;
 import com.hsms.backend.harvester.api.HarvesterApi;
 import com.hsms.backend.mission.api.MissionApi;
 import com.hsms.backend.risk.api.RiskApi;
@@ -55,7 +69,7 @@ public class DesertSimulationService implements SimulationApi {
         missionRequest.plannedEnd = now.plusSeconds(4 * 3600L);
         missionRequest.route = route;
         MissionDto mission = missionApi.createMission(actorLogin, missionRequest);
-        RiskSnapshotDto risk = riskApi.assessRisk(actorLogin, mission.id());
+        riskApi.assessRisk(actorLogin, mission.id());
         mission = missionApi.launchMission(actorLogin, mission.id(), new LaunchRequest(true, "Старт тестового сценария среды"));
 
         List<TelemetryEventDto> telemetry = new ArrayList<>();
@@ -85,7 +99,7 @@ public class DesertSimulationService implements SimulationApi {
             ));
         }
 
-        risk = riskApi.latestRisk(mission.id());
+        RiskSnapshotDto risk = riskApi.latestRisk(mission.id());
         return new DesertSimulationResult(missionApi.mission(mission.id()), telemetry, alarm, risk);
     }
 

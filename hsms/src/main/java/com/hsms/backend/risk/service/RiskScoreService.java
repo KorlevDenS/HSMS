@@ -3,19 +3,33 @@ package com.hsms.backend.risk.service;
 import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.DataQuality;
+import com.hsms.backend.common.HsmsDomain.DecisionZone;
+import com.hsms.backend.common.HsmsDomain.FreshnessStatus;
+import com.hsms.backend.common.HsmsDomain.HarvesterDto;
+import com.hsms.backend.common.HsmsDomain.MiningZoneDto;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.HsmsDomain.ResourceStatus;
+import com.hsms.backend.common.HsmsDomain.RiskPolicyDto;
+import com.hsms.backend.common.HsmsDomain.RiskPolicyUpdateRequest;
+import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
+import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.HsmsDomain.TelemetryEventDto;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
 import com.hsms.backend.risk.api.RiskApi;
 import com.hsms.backend.risk.model.RiskPolicy;
 import com.hsms.backend.risk.model.RiskScore;
 import com.hsms.backend.risk.repository.RiskPolicyRepository;
 import com.hsms.backend.risk.repository.RiskScoreRepository;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import static com.hsms.backend.common.HsmsOps.*;
@@ -29,7 +43,7 @@ public class RiskScoreService implements RiskApi {
     private final HsmsDtoAssembler dto;
     private final RiskPolicyRepository riskPolicyRepository;
     private final RiskScoreRepository riskScoreRepository;
-    private final MeterRegistry meterRegistry;
+    private final Counter riskAssessments;
 
     public RiskScoreService(
             HsmsAccessService access,
@@ -44,14 +58,14 @@ public class RiskScoreService implements RiskApi {
         this.dto = dto;
         this.riskPolicyRepository = riskPolicyRepository;
         this.riskScoreRepository = riskScoreRepository;
-        this.meterRegistry = meterRegistry;
+        this.riskAssessments = meterRegistry.counter("hsms_risk_assessments_total");
     }
 
     @Override
     public RiskSnapshotDto assessRisk(String actorLogin, long missionId) {
         HsmsUser actor = access.requireAny(actorLogin, RoleCode.ROLE_SUPPLY_MANAGER, RoleCode.ROLE_ADMINISTRATOR, RoleCode.ROLE_SECURITY_HEADQUARTERS_OPERATOR);
         RiskScore risk = calculateAndPersist(missionId, false);
-        meterRegistry.counter("hsms_risk_assessments_total").increment();
+        riskAssessments.increment();
         audit.record(actor, "RISK_ASSESSED", "risk_snapshot", risk.getId(), missionId, Map.of(
                 "riskScore", risk.getRiskScore(),
                 "pAttack", risk.getPAttack(),
@@ -145,7 +159,7 @@ public class RiskScoreService implements RiskApi {
                 : equipmentRisk(latestTelemetry.equipmentStatus());
         double telemetryPenalty = latestTelemetry == null
                 ? (mission.status() == MissionStatus.ACTIVE ? 0.25 : 0.0)
-                : (latestTelemetry.freshnessStatus() == FreshnessStatus.ACCEPTED ? 0.0 : 0.35);
+                : latestTelemetry.freshnessStatus() == FreshnessStatus.ACCEPTED ? 0.0 : 0.35;
         double incidentPenalty = includeIncidentPenalty || !mission.incidentIds().isEmpty() ? 0.75 : 0.0;
 
         double pAttack = clamp(0.10
@@ -224,7 +238,7 @@ public class RiskScoreService implements RiskApi {
     }
 
     private double equipmentRisk(String status) {
-        String normalized = blankToDefault(status, "NORMAL").toUpperCase();
+        String normalized = blankToDefault(status, "NORMAL").toUpperCase(Locale.ROOT);
         if (normalized.contains("CRITICAL") || normalized.contains("DAMAGED") || normalized.contains("ПОВРЕЖ")) {
             return 0.9;
         }

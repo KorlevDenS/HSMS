@@ -73,6 +73,20 @@ public class RiskScore {
     @OneToMany(mappedBy = "riskScore", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RiskFactor> factors = new ArrayList<>();
 
+    public List<RiskFactor> getFactors() {
+        return List.copyOf(factors);
+    }
+
+    public void setFactors(List<RiskFactor> factors) {
+        this.factors.clear();
+        if (factors != null) {
+            factors.forEach(factor -> {
+                factor.setRiskScore(this);
+                this.factors.add(factor);
+            });
+        }
+    }
+
     public void addFactor(String name, double value) {
         RiskFactor factor = new RiskFactor();
         factor.setRiskScore(this);

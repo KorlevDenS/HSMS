@@ -3,7 +3,22 @@ package com.hsms.backend.security.service;
 import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.AlarmRequest;
+import com.hsms.backend.common.HsmsDomain.AlarmResponse;
+import com.hsms.backend.common.HsmsDomain.ClassificationRequest;
+import com.hsms.backend.common.HsmsDomain.EvacuationCommandDto;
+import com.hsms.backend.common.HsmsDomain.EvacuationRequest;
+import com.hsms.backend.common.HsmsDomain.EvacuationStatus;
+import com.hsms.backend.common.HsmsDomain.IncidentDto;
+import com.hsms.backend.common.HsmsDomain.IncidentStatus;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseOpenRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceTrigger;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
+import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.HsmsDomain.Severity;
 import com.hsms.backend.insurance.api.InsuranceApi;
 import com.hsms.backend.mission.api.MissionApi;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
@@ -16,6 +31,7 @@ import com.hsms.backend.security.model.Incident;
 import com.hsms.backend.security.repository.AlarmSignalRepository;
 import com.hsms.backend.security.repository.EvacuationCommandRepository;
 import com.hsms.backend.security.repository.IncidentRepository;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -44,7 +60,9 @@ public class SecurityService implements SecurityApi {
     private final RiskApi riskApi;
     private final MissionApi missionApi;
     private final InsuranceApi insuranceApi;
-    private final MeterRegistry meterRegistry;
+    private final Counter createdIncidents;
+    private final Counter evacuationCommands;
+    private final Counter slaBreaches;
 
     public SecurityService(
             HsmsAccessService access,
@@ -67,7 +85,9 @@ public class SecurityService implements SecurityApi {
         this.riskApi = riskApi;
         this.missionApi = missionApi;
         this.insuranceApi = insuranceApi;
-        this.meterRegistry = meterRegistry;
+        this.createdIncidents = meterRegistry.counter("hsms_incidents_created_total");
+        this.evacuationCommands = meterRegistry.counter("hsms_evacuation_commands_total");
+        this.slaBreaches = meterRegistry.counter("hsms_incidents_sla_breached_total");
     }
 
     @Override
@@ -104,7 +124,7 @@ public class SecurityService implements SecurityApi {
             incident.setSlaDeadlineAt(now.plus(INCIDENT_SLA));
             incident.setSlaBreached(false);
             incident = incidentRepository.saveAndFlush(incident);
-            meterRegistry.counter("hsms_incidents_created_total").increment();
+            createdIncidents.increment();
         }
 
         AlarmSignal alarm = new AlarmSignal();
@@ -189,7 +209,7 @@ public class SecurityService implements SecurityApi {
         EvacuationCommand saved = evacuationCommandRepository.saveAndFlush(command);
         incident.setEvacuationCommandId(saved.getId());
         incident.setStatus(IncidentStatus.EVACUATION_ORDERED);
-        meterRegistry.counter("hsms_evacuation_commands_total").increment();
+        evacuationCommands.increment();
         String reason = blankToDefault(request == null ? null : request.reason(), "Решение штаба безопасности");
         audit.record(actor, "EVACUATION_COMMAND_CREATED", "evacuation_command", saved.getId(), incident.getMissionId(), Map.of(
                 "incidentId", incidentId,
@@ -335,7 +355,7 @@ public class SecurityService implements SecurityApi {
                 && incident.getStatus() == IncidentStatus.OPEN) {
             incident.setSlaBreached(true);
             incident.setSlaBreachedNotifiedAt(Instant.now());
-            meterRegistry.counter("hsms_incidents_sla_breached_total").increment();
+            slaBreaches.increment();
             if (actor != null) {
                 audit.record(actor, "INCIDENT_SLA_BREACHED", "incident", incident.getId(), incident.getMissionId(), Map.of("deadline", incident.getSlaDeadlineAt()));
             }

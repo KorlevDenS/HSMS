@@ -1,6 +1,13 @@
 package com.hsms.backend.insurance.api;
 
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseOpenRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceCloseRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceRecalculateRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceRecalculationDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceRejectRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceTermsRequest;
+import com.hsms.backend.common.HsmsDomain.InsuranceTrigger;
 
 import java.util.List;
 

@@ -56,6 +56,20 @@ public class AuditEvent {
     @OneToMany(mappedBy = "auditEvent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AuditDetail> details = new ArrayList<>();
 
+    public List<AuditDetail> getDetails() {
+        return List.copyOf(details);
+    }
+
+    public void setDetails(List<AuditDetail> details) {
+        this.details.clear();
+        if (details != null) {
+            details.forEach(detail -> {
+                detail.setAuditEvent(this);
+                this.details.add(detail);
+            });
+        }
+    }
+
     public void addDetail(String key, Object value) {
         AuditDetail detail = new AuditDetail();
         detail.setAuditEvent(this);

@@ -48,4 +48,15 @@ public class HsmsUser {
             inverseJoinColumns = @JoinColumn(name = "role")
     )
     private Set<Role> roles = new LinkedHashSet<>();
+
+    public Set<Role> getRoles() {
+        return Set.copyOf(roles);
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles.clear();
+        if (roles != null) {
+            this.roles.addAll(roles);
+        }
+    }
 }

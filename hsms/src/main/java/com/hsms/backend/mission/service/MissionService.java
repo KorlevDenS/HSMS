@@ -1,17 +1,38 @@
 package com.hsms.backend.mission.service;
 
 import com.hsms.backend.auth.model.HsmsUser;
-import com.hsms.backend.common.*;
-import com.hsms.backend.common.HsmsDomain.*;
-import com.hsms.backend.mission.api.*;
+import com.hsms.backend.common.HsmsAccessService;
+import com.hsms.backend.common.HsmsAuditService;
+import com.hsms.backend.common.HsmsDomain.CrewDto;
+import com.hsms.backend.common.HsmsDomain.DecisionZone;
+import com.hsms.backend.common.HsmsDomain.HarvesterDto;
+import com.hsms.backend.common.HsmsDomain.IncidentStatus;
+import com.hsms.backend.common.HsmsDomain.LaunchRequest;
+import com.hsms.backend.common.HsmsDomain.MissionCloseRequest;
+import com.hsms.backend.common.HsmsDomain.MissionCreateRequest;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.MissionPatchRequest;
+import com.hsms.backend.common.HsmsDomain.MissionPlanDto;
+import com.hsms.backend.common.HsmsDomain.MissionReportDto;
+import com.hsms.backend.common.HsmsDomain.MissionReportRequest;
+import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.HsmsDomain.MissionTimelineDto;
+import com.hsms.backend.common.HsmsDomain.ResourceStatus;
+import com.hsms.backend.common.HsmsDomain.RiskCancelRequest;
+import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
+import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.HsmsDomain.RoutePointDto;
+import com.hsms.backend.common.HsmsException;
+import com.hsms.backend.harvester.model.MissionReport;
+import com.hsms.backend.harvester.repository.MissionReportRepository;
+import com.hsms.backend.mission.api.MissionApi;
 import com.hsms.backend.mission.model.Mission;
 import com.hsms.backend.mission.model.MissionPlan;
 import com.hsms.backend.mission.model.MissionRoute;
 import com.hsms.backend.mission.repository.MissionPlanRepository;
 import com.hsms.backend.mission.repository.MissionRepository;
-import com.hsms.backend.harvester.model.MissionReport;
-import com.hsms.backend.harvester.repository.MissionReportRepository;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +63,8 @@ public class MissionService implements MissionApi {
     private final MissionRepository missionRepository;
     private final MissionPlanRepository missionPlanRepository;
     private final MissionReportRepository missionReportRepository;
-    private final MeterRegistry meterRegistry;
+    private final Counter blockedLaunches;
+    private final Counter riskCancelledMissions;
 
     public MissionService(
             HsmsAccessService access,
@@ -59,7 +81,8 @@ public class MissionService implements MissionApi {
         this.missionRepository = missionRepository;
         this.missionPlanRepository = missionPlanRepository;
         this.missionReportRepository = missionReportRepository;
-        this.meterRegistry = meterRegistry;
+        this.blockedLaunches = meterRegistry.counter("hsms_risk_blocked_launch_total");
+        this.riskCancelledMissions = meterRegistry.counter("hsms_missions_risk_cancelled_total");
     }
 
     @Override
@@ -178,7 +201,7 @@ public class MissionService implements MissionApi {
             throw badRequest("Оценка риска устарела", "Повторите расчет риска для текущего маршрута.");
         }
         if (risk.decisionZone() == DecisionZone.BLOCKING) {
-            meterRegistry.counter("hsms_risk_blocked_launch_total").increment();
+            blockedLaunches.increment();
             throw badRequest("Запуск заблокирован: " + risk.blockingReason(), "Измените маршрут или оформите риск-отмену.");
         }
         if (risk.decisionZone() == DecisionZone.WARNING && (request == null || !request.confirmWarning())) {
@@ -238,7 +261,7 @@ public class MissionService implements MissionApi {
         missionEntity.setUpdatedAt(now);
         releaseResources(missionEntity);
         missionRepository.saveAndFlush(missionEntity);
-        meterRegistry.counter("hsms_missions_risk_cancelled_total").increment();
+        riskCancelledMissions.increment();
         audit.record(actor, "MISSION_RISK_CANCELLED", "mission", missionId, missionId, Map.of(
                 "reason", reason
         ));
@@ -494,7 +517,7 @@ public class MissionService implements MissionApi {
     }
 
     private List<MissionRoute> routePoints(List<RoutePointDto> route) {
-        List<MissionRoute> points = new java.util.ArrayList<>();
+        List<MissionRoute> points = new ArrayList<>();
         for (int index = 0; index < route.size(); index++) {
             RoutePointDto point = route.get(index);
             MissionRoute entity = new MissionRoute();

@@ -11,6 +11,18 @@ public final class HsmsDomain {
     private HsmsDomain() {
     }
 
+    private static <T> List<T> immutableList(List<T> values) {
+        return values == null ? List.of() : List.copyOf(values);
+    }
+
+    private static <K, V> Map<K, V> immutableMap(Map<K, V> values) {
+        return values == null ? Map.of() : Map.copyOf(values);
+    }
+
+    private static <T> Set<T> immutableSet(Set<T> values) {
+        return values == null ? Set.of() : Set.copyOf(values);
+    }
+
     public enum RoleCode {
         ROLE_SUPPLY_MANAGER,
         ROLE_HARVESTER_CREW,
@@ -115,6 +127,14 @@ public final class HsmsDomain {
             String phone,
             Set<RoleCode> roles
     ) {
+        public HsmsUserDto {
+            roles = immutableSet(roles);
+        }
+
+        @Override
+        public Set<RoleCode> roles() {
+            return immutableSet(roles);
+        }
     }
 
     public record LoginRequest(String login, String password) {
@@ -131,9 +151,25 @@ public final class HsmsDomain {
             String phone,
             Set<RoleCode> roles
     ) {
+        public UserCreateRequest {
+            roles = immutableSet(roles);
+        }
+
+        @Override
+        public Set<RoleCode> roles() {
+            return immutableSet(roles);
+        }
     }
 
     public record UserRoleUpdateRequest(Set<RoleCode> roles) {
+        public UserRoleUpdateRequest {
+            roles = immutableSet(roles);
+        }
+
+        @Override
+        public Set<RoleCode> roles() {
+            return immutableSet(roles);
+        }
     }
 
     public record MiningZoneDto(long id, String name, double riskLevel, String coordinates, boolean active) {
@@ -286,6 +322,20 @@ public final class HsmsDomain {
             Instant createdAt,
             Instant updatedAt
     ) {
+        public MissionDto {
+            route = immutableList(route);
+            incidentIds = immutableList(incidentIds);
+        }
+
+        @Override
+        public List<RoutePointDto> route() {
+            return immutableList(route);
+        }
+
+        @Override
+        public List<Long> incidentIds() {
+            return immutableList(incidentIds);
+        }
     }
 
     public record MissionPlanDto(
@@ -339,6 +389,14 @@ public final class HsmsDomain {
             boolean stale,
             String staleReason
     ) {
+        public RiskSnapshotDto {
+            factors = immutableMap(factors);
+        }
+
+        @Override
+        public Map<String, Double> factors() {
+            return immutableMap(factors);
+        }
     }
 
     public record TelemetryRequest(
@@ -467,6 +525,14 @@ public final class HsmsDomain {
             String closedBy,
             List<InsuranceRecalculationDto> history
     ) {
+        public InsuranceCaseDto {
+            history = immutableList(history);
+        }
+
+        @Override
+        public List<InsuranceRecalculationDto> history() {
+            return immutableList(history);
+        }
     }
 
     public record InsuranceRecalculateRequest(String reason) {
@@ -527,6 +593,14 @@ public final class HsmsDomain {
             Instant createdAt,
             Map<String, Object> details
     ) {
+        public AuditEventDto {
+            details = immutableMap(details);
+        }
+
+        @Override
+        public Map<String, Object> details() {
+            return immutableMap(details);
+        }
     }
 
     public record DashboardDto(
@@ -543,6 +617,14 @@ public final class HsmsDomain {
             Instant periodFrom,
             Instant periodTo
     ) {
+        public DashboardDto {
+            incidentsBySeverity = immutableMap(incidentsBySeverity);
+        }
+
+        @Override
+        public Map<Severity, Long> incidentsBySeverity() {
+            return immutableMap(incidentsBySeverity);
+        }
     }
 
     public record BootstrapDto(
@@ -558,6 +640,56 @@ public final class HsmsDomain {
             RiskPolicyDto activeRiskPolicy,
             DashboardDto dashboard
     ) {
+        public BootstrapDto {
+            users = immutableList(users);
+            zones = immutableList(zones);
+            harvesters = immutableList(harvesters);
+            crews = immutableList(crews);
+            missions = immutableList(missions);
+            incidents = immutableList(incidents);
+            insuranceCases = immutableList(insuranceCases);
+            audit = immutableList(audit);
+        }
+
+        @Override
+        public List<HsmsUserDto> users() {
+            return immutableList(users);
+        }
+
+        @Override
+        public List<MiningZoneDto> zones() {
+            return immutableList(zones);
+        }
+
+        @Override
+        public List<HarvesterDto> harvesters() {
+            return immutableList(harvesters);
+        }
+
+        @Override
+        public List<CrewDto> crews() {
+            return immutableList(crews);
+        }
+
+        @Override
+        public List<MissionDto> missions() {
+            return immutableList(missions);
+        }
+
+        @Override
+        public List<IncidentDto> incidents() {
+            return immutableList(incidents);
+        }
+
+        @Override
+        public List<InsuranceCaseDto> insuranceCases() {
+            return immutableList(insuranceCases);
+        }
+
+        @Override
+        public List<AuditEventDto> audit() {
+            return immutableList(audit);
+        }
     }
 
     public record MissionTimelineDto(
@@ -567,6 +699,26 @@ public final class HsmsDomain {
             InsuranceCaseDto insuranceCase,
             List<AuditEventDto> audit
     ) {
+        public MissionTimelineDto {
+            telemetry = immutableList(telemetry);
+            incidents = immutableList(incidents);
+            audit = immutableList(audit);
+        }
+
+        @Override
+        public List<TelemetryEventDto> telemetry() {
+            return immutableList(telemetry);
+        }
+
+        @Override
+        public List<IncidentDto> incidents() {
+            return immutableList(incidents);
+        }
+
+        @Override
+        public List<AuditEventDto> audit() {
+            return immutableList(audit);
+        }
     }
 
     public record ApiError(String message, String action, int status, Instant timestamp) {
@@ -588,5 +740,13 @@ public final class HsmsDomain {
             AlarmResponse alarm,
             RiskSnapshotDto risk
     ) {
+        public DesertSimulationResult {
+            telemetry = immutableList(telemetry);
+        }
+
+        @Override
+        public List<TelemetryEventDto> telemetry() {
+            return immutableList(telemetry);
+        }
     }
 }

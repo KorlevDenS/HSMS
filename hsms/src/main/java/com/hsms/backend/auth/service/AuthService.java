@@ -9,7 +9,20 @@ import com.hsms.backend.auth.repository.RoleRepository;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
 import com.hsms.backend.common.HsmsException;
-import com.hsms.backend.common.HsmsDomain.*;
+import com.hsms.backend.common.HsmsDomain.AuditEventDto;
+import com.hsms.backend.common.HsmsDomain.BootstrapDto;
+import com.hsms.backend.common.HsmsDomain.CrewDto;
+import com.hsms.backend.common.HsmsDomain.DashboardDto;
+import com.hsms.backend.common.HsmsDomain.HarvesterDto;
+import com.hsms.backend.common.HsmsDomain.HsmsUserDto;
+import com.hsms.backend.common.HsmsDomain.IncidentDto;
+import com.hsms.backend.common.HsmsDomain.InsuranceCaseDto;
+import com.hsms.backend.common.HsmsDomain.LoginRequest;
+import com.hsms.backend.common.HsmsDomain.LoginResponse;
+import com.hsms.backend.common.HsmsDomain.MissionDto;
+import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.HsmsDomain.UserCreateRequest;
+import com.hsms.backend.common.HsmsDomain.UserRoleUpdateRequest;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
 import com.hsms.backend.security.auth.HsmsPrincipal;
 import com.hsms.backend.security.auth.HsmsTokenService;
@@ -137,7 +150,7 @@ public class AuthService implements AuthApi {
         Set<RoleCode> roles = access.roles(user);
         List<CrewDto> visibleCrews = visibleCrews(user, roles);
         Set<Long> visibleCrewIds = visibleCrews.stream().map(CrewDto::id).collect(Collectors.toUnmodifiableSet());
-        List<MissionDto> visibleMissions = visibleMissions(user, roles, visibleCrewIds);
+        List<MissionDto> visibleMissions = visibleMissions(roles, visibleCrewIds);
         Set<Long> visibleMissionIds = visibleMissions.stream().map(MissionDto::id).collect(Collectors.toUnmodifiableSet());
         return new BootstrapDto(
                 access.dto(user),
@@ -201,7 +214,7 @@ public class AuthService implements AuthApi {
         return List.of();
     }
 
-    private List<MissionDto> visibleMissions(HsmsUser user, Set<RoleCode> roles, Set<Long> visibleCrewIds) {
+    private List<MissionDto> visibleMissions(Set<RoleCode> roles, Set<Long> visibleCrewIds) {
         if (hasAny(roles,
                 RoleCode.ROLE_SUPPLY_MANAGER,
                 RoleCode.ROLE_SECURITY_HEADQUARTERS_OPERATOR,
