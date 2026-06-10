@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import sonarjs from 'eslint-plugin-sonarjs';
 import globals from 'globals';
 
 export default [
@@ -6,6 +7,7 @@ export default [
     ignores: ['dist/**', 'node_modules/**']
   },
   js.configs.recommended,
+  sonarjs.configs.recommended,
   {
     files: ['src/**/*.{js,jsx}'],
     languageOptions: {
