@@ -1,11 +1,11 @@
 package com.hsms.backend.api_gateway.controller;
 
-import com.hsms.backend.common.HsmsDomain.AlarmRequest;
-import com.hsms.backend.common.HsmsDomain.AlarmResponse;
-import com.hsms.backend.common.HsmsDomain.ClassificationRequest;
-import com.hsms.backend.common.HsmsDomain.EvacuationCommandDto;
-import com.hsms.backend.common.HsmsDomain.EvacuationRequest;
-import com.hsms.backend.common.HsmsDomain.IncidentDto;
+import com.hsms.backend.common.AlarmRequest;
+import com.hsms.backend.common.AlarmResponse;
+import com.hsms.backend.common.ClassificationRequest;
+import com.hsms.backend.common.EvacuationCommandDto;
+import com.hsms.backend.common.EvacuationRequest;
+import com.hsms.backend.common.IncidentDto;
 import com.hsms.backend.security.api.SecurityApi;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

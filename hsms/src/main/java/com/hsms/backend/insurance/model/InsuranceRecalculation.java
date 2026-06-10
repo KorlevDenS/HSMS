@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-import com.hsms.backend.common.HsmsDomain.InsuranceHistoryEvent;
+import com.hsms.backend.common.InsuranceHistoryEvent;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -1,11 +1,11 @@
 package com.hsms.backend.security.api;
 
-import com.hsms.backend.common.HsmsDomain.AlarmRequest;
-import com.hsms.backend.common.HsmsDomain.AlarmResponse;
-import com.hsms.backend.common.HsmsDomain.ClassificationRequest;
-import com.hsms.backend.common.HsmsDomain.EvacuationCommandDto;
-import com.hsms.backend.common.HsmsDomain.EvacuationRequest;
-import com.hsms.backend.common.HsmsDomain.IncidentDto;
+import com.hsms.backend.common.AlarmRequest;
+import com.hsms.backend.common.AlarmResponse;
+import com.hsms.backend.common.ClassificationRequest;
+import com.hsms.backend.common.EvacuationCommandDto;
+import com.hsms.backend.common.EvacuationRequest;
+import com.hsms.backend.common.IncidentDto;
 
 import java.util.List;
 

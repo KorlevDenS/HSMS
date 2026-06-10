@@ -1,6 +1,6 @@
 package com.hsms.backend.insurance.repository;
 
-import com.hsms.backend.common.HsmsDomain.InsuranceStatus;
+import com.hsms.backend.common.InsuranceStatus;
 import com.hsms.backend.insurance.model.InsuranceCase;
 import org.springframework.data.jpa.repository.JpaRepository;
 

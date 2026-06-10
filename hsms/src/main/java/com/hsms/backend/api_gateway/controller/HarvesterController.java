@@ -1,12 +1,12 @@
 package com.hsms.backend.api_gateway.controller;
 
-import com.hsms.backend.common.HsmsDomain.CrewCreateRequest;
-import com.hsms.backend.common.HsmsDomain.CrewDto;
-import com.hsms.backend.common.HsmsDomain.HarvesterCreateRequest;
-import com.hsms.backend.common.HsmsDomain.HarvesterDto;
-import com.hsms.backend.common.HsmsDomain.TelemetryEventDto;
-import com.hsms.backend.common.HsmsDomain.TelemetryRequest;
-import com.hsms.backend.common.HsmsDomain.TelemetryResponse;
+import com.hsms.backend.common.CrewCreateRequest;
+import com.hsms.backend.common.CrewDto;
+import com.hsms.backend.common.HarvesterCreateRequest;
+import com.hsms.backend.common.HarvesterDto;
+import com.hsms.backend.common.TelemetryEventDto;
+import com.hsms.backend.common.TelemetryRequest;
+import com.hsms.backend.common.TelemetryResponse;
 import com.hsms.backend.harvester.api.HarvesterApi;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

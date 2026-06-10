@@ -1,8 +1,8 @@
 package com.hsms.backend.risk.api;
 
-import com.hsms.backend.common.HsmsDomain.RiskPolicyDto;
-import com.hsms.backend.common.HsmsDomain.RiskPolicyUpdateRequest;
-import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
+import com.hsms.backend.common.RiskPolicyDto;
+import com.hsms.backend.common.RiskPolicyUpdateRequest;
+import com.hsms.backend.common.RiskSnapshotDto;
 
 public interface RiskApi {
     RiskSnapshotDto assessRisk(String actorLogin, long missionId);

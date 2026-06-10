@@ -3,8 +3,6 @@ package com.hsms.backend.common;
 import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.auth.model.Role;
 import com.hsms.backend.auth.repository.HsmsUserRepository;
-import com.hsms.backend.common.HsmsDomain.HsmsUserDto;
-import com.hsms.backend.common.HsmsDomain.RoleCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

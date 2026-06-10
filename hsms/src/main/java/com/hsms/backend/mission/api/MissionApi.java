@@ -1,14 +1,14 @@
 package com.hsms.backend.mission.api;
 
-import com.hsms.backend.common.HsmsDomain.LaunchRequest;
-import com.hsms.backend.common.HsmsDomain.MissionCloseRequest;
-import com.hsms.backend.common.HsmsDomain.MissionCreateRequest;
-import com.hsms.backend.common.HsmsDomain.MissionDto;
-import com.hsms.backend.common.HsmsDomain.MissionPatchRequest;
-import com.hsms.backend.common.HsmsDomain.MissionPlanDto;
-import com.hsms.backend.common.HsmsDomain.MissionReportRequest;
-import com.hsms.backend.common.HsmsDomain.MissionTimelineDto;
-import com.hsms.backend.common.HsmsDomain.RiskCancelRequest;
+import com.hsms.backend.common.LaunchRequest;
+import com.hsms.backend.common.MissionCloseRequest;
+import com.hsms.backend.common.MissionCreateRequest;
+import com.hsms.backend.common.MissionDto;
+import com.hsms.backend.common.MissionPatchRequest;
+import com.hsms.backend.common.MissionPlanDto;
+import com.hsms.backend.common.MissionReportRequest;
+import com.hsms.backend.common.MissionTimelineDto;
+import com.hsms.backend.common.RiskCancelRequest;
 
 import java.time.Instant;
 import java.util.List;

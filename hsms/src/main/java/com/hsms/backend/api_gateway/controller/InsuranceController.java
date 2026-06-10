@@ -1,11 +1,11 @@
 package com.hsms.backend.api_gateway.controller;
 
-import com.hsms.backend.common.HsmsDomain.InsuranceCaseDto;
-import com.hsms.backend.common.HsmsDomain.InsuranceCloseRequest;
-import com.hsms.backend.common.HsmsDomain.InsuranceRecalculateRequest;
-import com.hsms.backend.common.HsmsDomain.InsuranceRecalculationDto;
-import com.hsms.backend.common.HsmsDomain.InsuranceRejectRequest;
-import com.hsms.backend.common.HsmsDomain.InsuranceTermsRequest;
+import com.hsms.backend.common.InsuranceCaseDto;
+import com.hsms.backend.common.InsuranceCloseRequest;
+import com.hsms.backend.common.InsuranceRecalculateRequest;
+import com.hsms.backend.common.InsuranceRecalculationDto;
+import com.hsms.backend.common.InsuranceRejectRequest;
+import com.hsms.backend.common.InsuranceTermsRequest;
 import com.hsms.backend.insurance.api.InsuranceApi;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

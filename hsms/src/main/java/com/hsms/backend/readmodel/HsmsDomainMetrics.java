@@ -1,8 +1,8 @@
 package com.hsms.backend.readmodel;
 
-import com.hsms.backend.common.HsmsDomain.IncidentStatus;
-import com.hsms.backend.common.HsmsDomain.InsuranceStatus;
-import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.IncidentStatus;
+import com.hsms.backend.common.InsuranceStatus;
+import com.hsms.backend.common.MissionStatus;
 import com.hsms.backend.insurance.repository.InsuranceCaseRepository;
 import com.hsms.backend.mission.repository.MissionRepository;
 import com.hsms.backend.security.repository.IncidentRepository;

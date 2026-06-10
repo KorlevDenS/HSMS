@@ -1,7 +1,7 @@
 package com.hsms.backend.risk.model;
 
-import com.hsms.backend.common.HsmsDomain.DataQuality;
-import com.hsms.backend.common.HsmsDomain.DecisionZone;
+import com.hsms.backend.common.DataQuality;
+import com.hsms.backend.common.DecisionZone;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

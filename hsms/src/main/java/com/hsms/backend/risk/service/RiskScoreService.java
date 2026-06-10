@@ -3,19 +3,19 @@ package com.hsms.backend.risk.service;
 import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
-import com.hsms.backend.common.HsmsDomain.DataQuality;
-import com.hsms.backend.common.HsmsDomain.DecisionZone;
-import com.hsms.backend.common.HsmsDomain.FreshnessStatus;
-import com.hsms.backend.common.HsmsDomain.HarvesterDto;
-import com.hsms.backend.common.HsmsDomain.MiningZoneDto;
-import com.hsms.backend.common.HsmsDomain.MissionDto;
-import com.hsms.backend.common.HsmsDomain.MissionStatus;
-import com.hsms.backend.common.HsmsDomain.ResourceStatus;
-import com.hsms.backend.common.HsmsDomain.RiskPolicyDto;
-import com.hsms.backend.common.HsmsDomain.RiskPolicyUpdateRequest;
-import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
-import com.hsms.backend.common.HsmsDomain.RoleCode;
-import com.hsms.backend.common.HsmsDomain.TelemetryEventDto;
+import com.hsms.backend.common.DataQuality;
+import com.hsms.backend.common.DecisionZone;
+import com.hsms.backend.common.FreshnessStatus;
+import com.hsms.backend.common.HarvesterDto;
+import com.hsms.backend.common.MiningZoneDto;
+import com.hsms.backend.common.MissionDto;
+import com.hsms.backend.common.MissionStatus;
+import com.hsms.backend.common.ResourceStatus;
+import com.hsms.backend.common.RiskPolicyDto;
+import com.hsms.backend.common.RiskPolicyUpdateRequest;
+import com.hsms.backend.common.RiskSnapshotDto;
+import com.hsms.backend.common.RoleCode;
+import com.hsms.backend.common.TelemetryEventDto;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
 import com.hsms.backend.risk.api.RiskApi;
 import com.hsms.backend.risk.model.RiskPolicy;
@@ -154,12 +154,8 @@ public class RiskScoreService implements RiskApi {
         double harvesterNoiseLevel = harvester.noiseLevel();
         double timeWindowRisk = timeWindowRisk(mission.plannedStart());
         double routeComplexity = Math.min(1.0, Math.max(0.0, mission.route().size() / 10.0));
-        double equipmentRisk = latestTelemetry == null
-                ? (harvester.status() == ResourceStatus.MAINTENANCE ? 0.8 : 0.1)
-                : equipmentRisk(latestTelemetry.equipmentStatus());
-        double telemetryPenalty = latestTelemetry == null
-                ? (mission.status() == MissionStatus.ACTIVE ? 0.25 : 0.0)
-                : latestTelemetry.freshnessStatus() == FreshnessStatus.ACCEPTED ? 0.0 : 0.35;
+        double equipmentRisk = equipmentRisk(latestTelemetry, harvester.status());
+        double telemetryPenalty = telemetryPenalty(latestTelemetry, mission.status());
         double incidentPenalty = includeIncidentPenalty || !mission.incidentIds().isEmpty() ? 0.75 : 0.0;
 
         double pAttack = clamp(0.10
@@ -173,9 +169,7 @@ public class RiskScoreService implements RiskApi {
                 + telemetryPenalty * 10
                 + incidentPenalty * 10);
         riskScoreValue = Math.max(0, Math.min(100, riskScoreValue));
-        DecisionZone decisionZone = riskScoreValue >= policy.getBlockThreshold()
-                ? DecisionZone.BLOCKING
-                : riskScoreValue >= policy.getWarningThreshold() ? DecisionZone.WARNING : DecisionZone.ALLOWED;
+        DecisionZone decisionZone = decisionZone(riskScoreValue, policy);
         DataQuality quality = telemetryPenalty >= 0.25 ? DataQuality.DEGRADED : DataQuality.FRESH;
 
         Instant now = Instant.now();
@@ -200,8 +194,38 @@ public class RiskScoreService implements RiskApi {
         factors.put("equipmentRisk", round(equipmentRisk));
         factors.put("telemetryQualityPenalty", round(telemetryPenalty));
         factors.put("incidentPenalty", round(incidentPenalty));
-        factors.forEach(risk::addFactor);
+        factors.forEach((name, value) -> risk.addFactor(name, value.doubleValue()));
         return riskScoreRepository.saveAndFlush(risk);
+    }
+
+    private DecisionZone decisionZone(int riskScoreValue, RiskPolicy policy) {
+        if (riskScoreValue >= policy.getBlockThreshold()) {
+            return DecisionZone.BLOCKING;
+        }
+        if (riskScoreValue >= policy.getWarningThreshold()) {
+            return DecisionZone.WARNING;
+        }
+        return DecisionZone.ALLOWED;
+    }
+
+    private double equipmentRisk(TelemetryEventDto latestTelemetry, ResourceStatus harvesterStatus) {
+        if (latestTelemetry != null) {
+            return equipmentRisk(latestTelemetry.equipmentStatus());
+        }
+        if (harvesterStatus == ResourceStatus.MAINTENANCE) {
+            return 0.8;
+        }
+        return 0.1;
+    }
+
+    private double telemetryPenalty(TelemetryEventDto latestTelemetry, MissionStatus missionStatus) {
+        if (latestTelemetry != null) {
+            return latestTelemetry.freshnessStatus() == FreshnessStatus.ACCEPTED ? 0.0 : 0.35;
+        }
+        if (missionStatus == MissionStatus.ACTIVE) {
+            return 0.25;
+        }
+        return 0.0;
     }
 
     private int markOpenRiskSnapshotsStale(long missionId, String staleReason) {

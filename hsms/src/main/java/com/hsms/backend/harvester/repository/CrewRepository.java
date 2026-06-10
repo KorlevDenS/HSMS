@@ -1,6 +1,6 @@
 package com.hsms.backend.harvester.repository;
 
-import com.hsms.backend.common.HsmsDomain.ResourceStatus;
+import com.hsms.backend.common.ResourceStatus;
 import com.hsms.backend.harvester.model.Crew;
 import org.springframework.data.jpa.repository.JpaRepository;
 

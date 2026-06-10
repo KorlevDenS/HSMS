@@ -3,25 +3,25 @@ package com.hsms.backend.mission.service;
 import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
-import com.hsms.backend.common.HsmsDomain.CrewDto;
-import com.hsms.backend.common.HsmsDomain.DecisionZone;
-import com.hsms.backend.common.HsmsDomain.HarvesterDto;
-import com.hsms.backend.common.HsmsDomain.IncidentStatus;
-import com.hsms.backend.common.HsmsDomain.LaunchRequest;
-import com.hsms.backend.common.HsmsDomain.MissionCloseRequest;
-import com.hsms.backend.common.HsmsDomain.MissionCreateRequest;
-import com.hsms.backend.common.HsmsDomain.MissionDto;
-import com.hsms.backend.common.HsmsDomain.MissionPatchRequest;
-import com.hsms.backend.common.HsmsDomain.MissionPlanDto;
-import com.hsms.backend.common.HsmsDomain.MissionReportDto;
-import com.hsms.backend.common.HsmsDomain.MissionReportRequest;
-import com.hsms.backend.common.HsmsDomain.MissionStatus;
-import com.hsms.backend.common.HsmsDomain.MissionTimelineDto;
-import com.hsms.backend.common.HsmsDomain.ResourceStatus;
-import com.hsms.backend.common.HsmsDomain.RiskCancelRequest;
-import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
-import com.hsms.backend.common.HsmsDomain.RoleCode;
-import com.hsms.backend.common.HsmsDomain.RoutePointDto;
+import com.hsms.backend.common.CrewDto;
+import com.hsms.backend.common.DecisionZone;
+import com.hsms.backend.common.HarvesterDto;
+import com.hsms.backend.common.IncidentStatus;
+import com.hsms.backend.common.LaunchRequest;
+import com.hsms.backend.common.MissionCloseRequest;
+import com.hsms.backend.common.MissionCreateRequest;
+import com.hsms.backend.common.MissionDto;
+import com.hsms.backend.common.MissionPatchRequest;
+import com.hsms.backend.common.MissionPlanDto;
+import com.hsms.backend.common.MissionReportDto;
+import com.hsms.backend.common.MissionReportRequest;
+import com.hsms.backend.common.MissionStatus;
+import com.hsms.backend.common.MissionTimelineDto;
+import com.hsms.backend.common.ResourceStatus;
+import com.hsms.backend.common.RiskCancelRequest;
+import com.hsms.backend.common.RiskSnapshotDto;
+import com.hsms.backend.common.RoleCode;
+import com.hsms.backend.common.RoutePointDto;
 import com.hsms.backend.common.HsmsException;
 import com.hsms.backend.harvester.model.MissionReport;
 import com.hsms.backend.harvester.repository.MissionReportRepository;
@@ -271,6 +271,10 @@ public class MissionService implements MissionApi {
     @Override
     @Transactional(readOnly = true)
     public MissionPlanDto missionPlan(long missionId) {
+        return loadMissionPlan(missionId);
+    }
+
+    private MissionPlanDto loadMissionPlan(long missionId) {
         dto.requireMissionExists(missionId);
         return dto.plan(missionId)
                 .orElseThrow(() -> new HsmsException(404, "План рейса еще не опубликован", "Запустите рейс после актуального расчета риска."));
@@ -284,21 +288,21 @@ public class MissionService implements MissionApi {
                 && !access.roles(actor).contains(RoleCode.ROLE_ADMINISTRATOR)) {
             requireAssignedCrewActor(actor, missionId, "Получайте план только по рейсу назначенного экипажа.");
         }
-        return missionPlan(missionId);
+        return loadMissionPlan(missionId);
     }
 
     @Override
     public MissionPlanDto acknowledgePlan(String actorLogin, long missionId) {
         HsmsUser actor = access.requireAny(actorLogin, RoleCode.ROLE_HARVESTER_CREW, RoleCode.ROLE_ADMINISTRATOR);
         requireAssignedCrewActor(actor, missionId, "Подтверждайте план только по рейсу назначенного экипажа.");
-        MissionPlanDto plan = missionPlan(missionId);
+        MissionPlanDto plan = loadMissionPlan(missionId);
         Instant now = Instant.now();
         MissionPlan entity = missionPlanRepository.findById(plan.id())
                 .orElseThrow(() -> notFound("План рейса еще не опубликован", "Запустите рейс после актуального расчета риска."));
         entity.setAcknowledgedAt(now);
         entity.setAcknowledgedBy(actor.getLogin());
         audit.record(actor, "MISSION_PLAN_ACKNOWLEDGED", "mission_plan", plan.id(), missionId, Map.of("crew", actor.getLogin()));
-        return missionPlan(missionId);
+        return loadMissionPlan(missionId);
     }
 
     @Override
@@ -345,7 +349,7 @@ public class MissionService implements MissionApi {
             requireCompleteMissionReport(mission.report());
         }
         boolean hasOpenIncident = mission.incidentIds().stream()
-                .map(dto::incident)
+                .map(incidentId -> dto.incident(incidentId.longValue()))
                 .anyMatch(incident -> incident.status() != IncidentStatus.CLOSED);
         if (hasOpenIncident && finalStatus == MissionStatus.CLOSED) {
             throw badRequest("Связанный инцидент еще не закрыт", "Закройте инцидент или выберите финальный статус LOST/CANCELLED.");

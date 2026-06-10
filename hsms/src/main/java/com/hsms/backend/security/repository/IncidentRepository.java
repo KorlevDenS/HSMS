@@ -1,6 +1,6 @@
 package com.hsms.backend.security.repository;
 
-import com.hsms.backend.common.HsmsDomain.IncidentStatus;
+import com.hsms.backend.common.IncidentStatus;
 import com.hsms.backend.security.model.Incident;
 import org.springframework.data.jpa.repository.JpaRepository;
 

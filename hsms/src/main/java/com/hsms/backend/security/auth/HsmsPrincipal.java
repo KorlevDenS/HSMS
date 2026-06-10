@@ -1,6 +1,6 @@
 package com.hsms.backend.security.auth;
 
-import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.RoleCode;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 

@@ -1,6 +1,6 @@
 package com.hsms.backend.mission.model;
 
-import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.MissionStatus;
 import com.hsms.backend.common.model.MiningZone;
 import com.hsms.backend.harvester.model.Crew;
 import com.hsms.backend.harvester.model.Harvester;

@@ -1,6 +1,6 @@
 package com.hsms.backend.harvester.repository;
 
-import com.hsms.backend.common.HsmsDomain.FreshnessStatus;
+import com.hsms.backend.common.FreshnessStatus;
 import com.hsms.backend.harvester.model.TelemetryEvent;
 import org.springframework.data.jpa.repository.JpaRepository;
 

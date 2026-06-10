@@ -1,7 +1,7 @@
 package com.hsms.backend.security.model;
 
-import com.hsms.backend.common.HsmsDomain.IncidentStatus;
-import com.hsms.backend.common.HsmsDomain.Severity;
+import com.hsms.backend.common.IncidentStatus;
+import com.hsms.backend.common.Severity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

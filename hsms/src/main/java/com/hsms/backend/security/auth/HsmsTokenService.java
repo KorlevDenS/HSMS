@@ -3,7 +3,7 @@ package com.hsms.backend.security.auth;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.RoleCode;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

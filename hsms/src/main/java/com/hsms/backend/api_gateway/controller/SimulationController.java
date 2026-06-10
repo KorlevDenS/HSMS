@@ -1,7 +1,7 @@
 package com.hsms.backend.api_gateway.controller;
 
-import com.hsms.backend.common.HsmsDomain.DesertSimulationRequest;
-import com.hsms.backend.common.HsmsDomain.DesertSimulationResult;
+import com.hsms.backend.common.DesertSimulationRequest;
+import com.hsms.backend.common.DesertSimulationResult;
 import com.hsms.backend.simulation.api.SimulationApi;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

@@ -1,7 +1,6 @@
 package com.hsms.backend.common;
 
 import com.hsms.backend.auth.model.HsmsUser;
-import com.hsms.backend.common.HsmsDomain.RoleCode;
 import com.hsms.backend.common.model.AuditEvent;
 import com.hsms.backend.common.repository.AuditEventRepository;
 import io.micrometer.core.instrument.Counter;

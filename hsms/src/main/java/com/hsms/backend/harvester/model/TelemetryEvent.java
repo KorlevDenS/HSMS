@@ -1,6 +1,6 @@
 package com.hsms.backend.harvester.model;
 
-import com.hsms.backend.common.HsmsDomain.FreshnessStatus;
+import com.hsms.backend.common.FreshnessStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

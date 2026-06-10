@@ -1,6 +1,6 @@
 package com.hsms.backend.security.model;
 
-import com.hsms.backend.common.HsmsDomain.EvacuationStatus;
+import com.hsms.backend.common.EvacuationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

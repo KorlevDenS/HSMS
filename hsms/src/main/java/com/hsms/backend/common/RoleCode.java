@@ -1,0 +1,10 @@
+package com.hsms.backend.common;
+
+public enum RoleCode {
+        ROLE_SUPPLY_MANAGER,
+        ROLE_HARVESTER_CREW,
+        ROLE_INSURANCE_CONTOUR_OPERATOR,
+        ROLE_SECURITY_HEADQUARTERS_OPERATOR,
+        ROLE_ADMINISTRATOR,
+        ROLE_OPERATIONS_MANAGEMENT
+    }

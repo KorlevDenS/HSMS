@@ -3,22 +3,22 @@ package com.hsms.backend.security.service;
 import com.hsms.backend.auth.model.HsmsUser;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
-import com.hsms.backend.common.HsmsDomain.AlarmRequest;
-import com.hsms.backend.common.HsmsDomain.AlarmResponse;
-import com.hsms.backend.common.HsmsDomain.ClassificationRequest;
-import com.hsms.backend.common.HsmsDomain.EvacuationCommandDto;
-import com.hsms.backend.common.HsmsDomain.EvacuationRequest;
-import com.hsms.backend.common.HsmsDomain.EvacuationStatus;
-import com.hsms.backend.common.HsmsDomain.IncidentDto;
-import com.hsms.backend.common.HsmsDomain.IncidentStatus;
-import com.hsms.backend.common.HsmsDomain.InsuranceCaseDto;
-import com.hsms.backend.common.HsmsDomain.InsuranceCaseOpenRequest;
-import com.hsms.backend.common.HsmsDomain.InsuranceTrigger;
-import com.hsms.backend.common.HsmsDomain.MissionDto;
-import com.hsms.backend.common.HsmsDomain.MissionStatus;
-import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
-import com.hsms.backend.common.HsmsDomain.RoleCode;
-import com.hsms.backend.common.HsmsDomain.Severity;
+import com.hsms.backend.common.AlarmRequest;
+import com.hsms.backend.common.AlarmResponse;
+import com.hsms.backend.common.ClassificationRequest;
+import com.hsms.backend.common.EvacuationCommandDto;
+import com.hsms.backend.common.EvacuationRequest;
+import com.hsms.backend.common.EvacuationStatus;
+import com.hsms.backend.common.IncidentDto;
+import com.hsms.backend.common.IncidentStatus;
+import com.hsms.backend.common.InsuranceCaseDto;
+import com.hsms.backend.common.InsuranceCaseOpenRequest;
+import com.hsms.backend.common.InsuranceTrigger;
+import com.hsms.backend.common.MissionDto;
+import com.hsms.backend.common.MissionStatus;
+import com.hsms.backend.common.RiskSnapshotDto;
+import com.hsms.backend.common.RoleCode;
+import com.hsms.backend.common.Severity;
 import com.hsms.backend.insurance.api.InsuranceApi;
 import com.hsms.backend.mission.api.MissionApi;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
@@ -98,11 +98,7 @@ public class SecurityService implements SecurityApi {
             throw badRequest("Тревогу можно отправить только по активному рейсу", "Проверьте статус рейса.");
         }
         requireAssignedCrewActor(actor, missionId, "Отправляйте тревогу только от пользователя, связанного с экипажем рейса.");
-        String externalEventId = request == null ? null : request.externalEventId();
-        if (!hasText(externalEventId)) {
-            throw badRequest("Не указан идентификатор тревожного сигнала", "Передайте externalEventId для дедупликации.");
-        }
-        String normalizedExternalId = externalEventId.trim();
+        String normalizedExternalId = requireExternalEventId(request);
         var existing = dto.alarmByExternalId(missionId, normalizedExternalId);
         if (existing.isPresent()) {
             IncidentDto incident = dto.incident(existing.get().incidentId());
@@ -371,5 +367,13 @@ public class SecurityService implements SecurityApi {
         if (!actor.getLogin().equals(crew.getAssignedLogin())) {
             throw forbidden("Экипаж не назначен на этот рейс", action);
         }
+    }
+
+    private String requireExternalEventId(AlarmRequest request) {
+        String externalEventId = request == null ? null : request.externalEventId();
+        if (externalEventId == null || externalEventId.isBlank()) {
+            throw badRequest("Не указан идентификатор тревожного сигнала", "Передайте externalEventId для дедупликации.");
+        }
+        return externalEventId.trim();
     }
 }

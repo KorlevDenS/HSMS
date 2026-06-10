@@ -1,7 +1,7 @@
 package com.hsms.backend.api_gateway.controller;
 
-import com.hsms.backend.common.HsmsDomain.RiskPolicyDto;
-import com.hsms.backend.common.HsmsDomain.RiskPolicyUpdateRequest;
+import com.hsms.backend.common.RiskPolicyDto;
+import com.hsms.backend.common.RiskPolicyUpdateRequest;
 import com.hsms.backend.risk.api.RiskApi;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

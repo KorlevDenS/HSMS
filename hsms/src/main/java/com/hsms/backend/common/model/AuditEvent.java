@@ -1,6 +1,6 @@
 package com.hsms.backend.common.model;
 
-import com.hsms.backend.common.HsmsDomain.RoleCode;
+import com.hsms.backend.common.RoleCode;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

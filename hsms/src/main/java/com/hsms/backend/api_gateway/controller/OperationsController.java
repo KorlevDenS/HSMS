@@ -1,9 +1,9 @@
 package com.hsms.backend.api_gateway.controller;
 
 import com.hsms.backend.auth.api.AuthApi;
-import com.hsms.backend.common.HsmsDomain.AuditEventDto;
-import com.hsms.backend.common.HsmsDomain.BootstrapDto;
-import com.hsms.backend.common.HsmsDomain.DashboardDto;
+import com.hsms.backend.common.AuditEventDto;
+import com.hsms.backend.common.BootstrapDto;
+import com.hsms.backend.common.DashboardDto;
 import com.hsms.backend.common.RealtimeEventService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

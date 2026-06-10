@@ -1,29 +1,29 @@
 package com.hsms.backend.readmodel;
 
-import com.hsms.backend.common.HsmsDomain.AuditEventDto;
-import com.hsms.backend.common.HsmsDomain.CrewDto;
-import com.hsms.backend.common.HsmsDomain.DashboardDto;
-import com.hsms.backend.common.HsmsDomain.EvacuationCommandDto;
-import com.hsms.backend.common.HsmsDomain.FreshnessStatus;
-import com.hsms.backend.common.HsmsDomain.HarvesterDto;
-import com.hsms.backend.common.HsmsDomain.IncidentDto;
-import com.hsms.backend.common.HsmsDomain.IncidentStatus;
-import com.hsms.backend.common.HsmsDomain.InsuranceCaseDto;
-import com.hsms.backend.common.HsmsDomain.InsuranceHistoryEvent;
-import com.hsms.backend.common.HsmsDomain.InsuranceRecalculationDto;
-import com.hsms.backend.common.HsmsDomain.InsuranceStatus;
-import com.hsms.backend.common.HsmsDomain.MiningZoneDto;
-import com.hsms.backend.common.HsmsDomain.MissionDto;
-import com.hsms.backend.common.HsmsDomain.MissionPlanDto;
-import com.hsms.backend.common.HsmsDomain.MissionReportDto;
-import com.hsms.backend.common.HsmsDomain.MissionStatus;
-import com.hsms.backend.common.HsmsDomain.MissionTimelineDto;
-import com.hsms.backend.common.HsmsDomain.ResourceStatus;
-import com.hsms.backend.common.HsmsDomain.RiskPolicyDto;
-import com.hsms.backend.common.HsmsDomain.RiskSnapshotDto;
-import com.hsms.backend.common.HsmsDomain.RoutePointDto;
-import com.hsms.backend.common.HsmsDomain.Severity;
-import com.hsms.backend.common.HsmsDomain.TelemetryEventDto;
+import com.hsms.backend.common.AuditEventDto;
+import com.hsms.backend.common.CrewDto;
+import com.hsms.backend.common.DashboardDto;
+import com.hsms.backend.common.EvacuationCommandDto;
+import com.hsms.backend.common.FreshnessStatus;
+import com.hsms.backend.common.HarvesterDto;
+import com.hsms.backend.common.IncidentDto;
+import com.hsms.backend.common.IncidentStatus;
+import com.hsms.backend.common.InsuranceCaseDto;
+import com.hsms.backend.common.InsuranceHistoryEvent;
+import com.hsms.backend.common.InsuranceRecalculationDto;
+import com.hsms.backend.common.InsuranceStatus;
+import com.hsms.backend.common.MiningZoneDto;
+import com.hsms.backend.common.MissionDto;
+import com.hsms.backend.common.MissionPlanDto;
+import com.hsms.backend.common.MissionReportDto;
+import com.hsms.backend.common.MissionStatus;
+import com.hsms.backend.common.MissionTimelineDto;
+import com.hsms.backend.common.ResourceStatus;
+import com.hsms.backend.common.RiskPolicyDto;
+import com.hsms.backend.common.RiskSnapshotDto;
+import com.hsms.backend.common.RoutePointDto;
+import com.hsms.backend.common.Severity;
+import com.hsms.backend.common.TelemetryEventDto;
 import com.hsms.backend.common.model.AuditDetail;
 import com.hsms.backend.common.model.AuditEvent;
 import com.hsms.backend.common.model.MiningZone;
@@ -330,7 +330,9 @@ public class HsmsDtoAssembler {
         return new MissionTimelineDto(
                 mission,
                 telemetry(missionId),
-                mission.incidentIds().stream().map(this::incident).toList(),
+                mission.incidentIds().stream()
+                        .map(incidentId -> incident(incidentId.longValue()))
+                        .toList(),
                 insurance,
                 audit(missionId)
         );

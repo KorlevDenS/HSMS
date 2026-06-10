@@ -2,11 +2,11 @@ package com.hsms.backend.api_gateway.controller;
 
 import com.hsms.backend.auth.api.AuthApi;
 import com.hsms.backend.auth.api.RoleResponse;
-import com.hsms.backend.common.HsmsDomain.HsmsUserDto;
-import com.hsms.backend.common.HsmsDomain.LoginRequest;
-import com.hsms.backend.common.HsmsDomain.LoginResponse;
-import com.hsms.backend.common.HsmsDomain.UserCreateRequest;
-import com.hsms.backend.common.HsmsDomain.UserRoleUpdateRequest;
+import com.hsms.backend.common.HsmsUserDto;
+import com.hsms.backend.common.LoginRequest;
+import com.hsms.backend.common.LoginResponse;
+import com.hsms.backend.common.UserCreateRequest;
+import com.hsms.backend.common.UserRoleUpdateRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;

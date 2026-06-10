@@ -1,6 +1,6 @@
 package com.hsms.backend.mission.repository;
 
-import com.hsms.backend.common.HsmsDomain.MissionStatus;
+import com.hsms.backend.common.MissionStatus;
 import com.hsms.backend.mission.model.Mission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -1,6 +1,6 @@
 package com.hsms.backend.security.repository;
 
-import com.hsms.backend.common.HsmsDomain.EvacuationStatus;
+import com.hsms.backend.common.EvacuationStatus;
 import com.hsms.backend.security.model.EvacuationCommand;
 import org.springframework.data.jpa.repository.JpaRepository;
 

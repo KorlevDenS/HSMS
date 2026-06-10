@@ -1,7 +1,7 @@
 package com.hsms.backend.insurance.model;
 
-import com.hsms.backend.common.HsmsDomain.InsuranceStatus;
-import com.hsms.backend.common.HsmsDomain.InsuranceTrigger;
+import com.hsms.backend.common.InsuranceStatus;
+import com.hsms.backend.common.InsuranceTrigger;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
