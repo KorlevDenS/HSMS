@@ -37,6 +37,18 @@ public class RiskPolicy {
     @Column(name = "active_from", nullable = false)
     private Instant activeFrom;
 
+    @Column(name = "changed_by", nullable = false, length = 80)
+    private String changedBy;
+
+    @Column(name = "change_reason", nullable = false, length = 1000)
+    private String changeReason;
+
+    @Column(name = "validated_scenarios", nullable = false, length = 1000)
+    private String validatedScenarios;
+
+    @Column(name = "choam_impact", nullable = false, length = 1000)
+    private String choamImpact;
+
     @Column(nullable = false)
     private boolean active;
 }

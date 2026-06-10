@@ -26,6 +26,8 @@ public interface SecurityApi {
 
     EvacuationCommandDto markEvacuationDeliveryFailed(String actorLogin, long incidentId, EvacuationRequest request);
 
+    EvacuationCommandDto cancelEvacuation(String actorLogin, long incidentId, EvacuationRequest request);
+
     IncidentDto closeIncident(String actorLogin, long incidentId);
 
     String incidentReportCsv();

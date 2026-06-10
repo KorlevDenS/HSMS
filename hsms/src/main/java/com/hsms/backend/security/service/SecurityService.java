@@ -291,10 +291,37 @@ public class SecurityService implements SecurityApi {
     }
 
     @Override
+    public EvacuationCommandDto cancelEvacuation(String actorLogin, long incidentId, EvacuationRequest request) {
+        HsmsUser actor = access.requireAny(actorLogin, RoleCode.ROLE_SECURITY_HEADQUARTERS_OPERATOR, RoleCode.ROLE_ADMINISTRATOR);
+        Incident incident = dto.incidentEntity(incidentId);
+        if (incident.getEvacuationCommandId() == null) {
+            throw badRequest("Команда эвакуации еще не отправлена", "Отменять можно только опубликованную команду эвакуации.");
+        }
+        EvacuationCommand command = evacuationCommandRepository.findById(incident.getEvacuationCommandId())
+                .orElseThrow(() -> badRequest("Команда эвакуации еще не отправлена", "Отменять можно только опубликованную команду эвакуации."));
+        if (command.getStatus() == EvacuationStatus.ACKNOWLEDGED) {
+            throw badRequest("Подтвержденную эвакуацию нельзя отменить", "Закройте инцидент после подтверждения экипажа.");
+        }
+        if (command.getStatus() != EvacuationStatus.CANCELLED) {
+            String reason = blankToDefault(request == null ? null : request.reason(), "Штаб безопасности отменил команду эвакуации");
+            command.setStatus(EvacuationStatus.CANCELLED);
+            command.setDeliveryError(reason);
+            command.setExpiresAt(null);
+            incident.setStatus(incident.getSeverity() == Severity.LOW ? IncidentStatus.MONITORING : IncidentStatus.CLASSIFIED);
+            audit.record(actor, "EVACUATION_COMMAND_CANCELLED", "evacuation_command", command.getId(), incident.getMissionId(), Map.of(
+                    "incidentId", incidentId,
+                    "reason", reason
+            ));
+        }
+        return dto.evacuation(command.getId()).orElseThrow();
+    }
+
+    @Override
     public IncidentDto closeIncident(String actorLogin, long incidentId) {
         HsmsUser actor = access.requireAny(actorLogin, RoleCode.ROLE_SECURITY_HEADQUARTERS_OPERATOR, RoleCode.ROLE_ADMINISTRATOR);
         Incident incident = dto.incidentEntity(incidentId);
         updateSlaIfNeeded(incident, actor);
+        requireEvacuationResolvedBeforeClose(incident);
         Instant now = Instant.now();
         incident.setStatus(IncidentStatus.CLOSED);
         incident.setClosedAt(now);
@@ -355,6 +382,20 @@ public class SecurityService implements SecurityApi {
             if (actor != null) {
                 audit.record(actor, "INCIDENT_SLA_BREACHED", "incident", incident.getId(), incident.getMissionId(), Map.of("deadline", incident.getSlaDeadlineAt()));
             }
+        }
+    }
+
+    private void requireEvacuationResolvedBeforeClose(Incident incident) {
+        if (incident.getSeverity() != Severity.HIGH && incident.getSeverity() != Severity.CRITICAL) {
+            return;
+        }
+        if (incident.getEvacuationCommandId() == null) {
+            throw badRequest("Критичный инцидент нельзя закрыть без команды эвакуации", "Сначала отправьте команду эвакуации и получите подтверждение экипажа.");
+        }
+        EvacuationCommand command = evacuationCommandRepository.findById(incident.getEvacuationCommandId())
+                .orElseThrow(() -> badRequest("Команда эвакуации не найдена", "Повторите отправку команды эвакуации."));
+        if (command.getStatus() != EvacuationStatus.ACKNOWLEDGED) {
+            throw badRequest("Эвакуация не подтверждена экипажем", "Закрытие HIGH/CRITICAL инцидента доступно только после ACKNOWLEDGED эвакуации.");
         }
     }
 

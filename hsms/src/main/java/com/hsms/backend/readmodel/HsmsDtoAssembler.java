@@ -485,7 +485,8 @@ public class HsmsDtoAssembler {
 
     private RiskPolicyDto riskPolicy(RiskPolicy policy) {
         return new RiskPolicyDto(policy.getId(), policy.getVersion(), policy.getWarningThreshold(),
-                policy.getBlockThreshold(), policy.getFormulaDescription(), policy.getActiveFrom());
+                policy.getBlockThreshold(), policy.getFormulaDescription(), policy.getActiveFrom(),
+                policy.getChangedBy(), policy.getChangeReason(), policy.getValidatedScenarios(), policy.getChoamImpact());
     }
 
     private RiskSnapshotDto risk(RiskScore risk) {

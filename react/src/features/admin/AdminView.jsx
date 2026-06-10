@@ -10,6 +10,9 @@ import { objectLabel } from '../../shared/status';
 export function AdminView({ api, run, users, policy, audit, missions, incidents, cases }) {
   const [warningThreshold, setWarningThreshold] = useState(policy?.warningThreshold || 50);
   const [blockThreshold, setBlockThreshold] = useState(policy?.blockThreshold || 75);
+  const [changeReason, setChangeReason] = useState('');
+  const [validatedScenarios, setValidatedScenarios] = useState('normal launch, warning launch, blocking risk, degraded telemetry, incident, CHOAM insurance');
+  const [choamImpact, setChoamImpact] = useState('Risk policy version remains traceable in risk snapshots and insurance decisions');
   const [newUser, setNewUser] = useState(emptyNewUser);
   const [roleDrafts, setRoleDrafts] = useState({});
   const [historyTarget, setHistoryTarget] = useState('');
@@ -75,15 +78,21 @@ export function AdminView({ api, run, users, policy, audit, missions, incidents,
           <Stack spacing={2}>
             <TextField id="risk-warning-threshold" name="warningThreshold" type="number" label="Порог предупреждения" value={warningThreshold} onChange={(event) => setWarningThreshold(Number(event.target.value))} />
             <TextField id="risk-block-threshold" name="blockThreshold" type="number" label="Порог блокировки" value={blockThreshold} onChange={(event) => setBlockThreshold(Number(event.target.value))} />
+            <TextField id="risk-policy-reason" name="changeReason" label="Основание изменения" value={changeReason} onChange={(event) => setChangeReason(event.target.value)} multiline minRows={2} required />
+            <TextField id="risk-policy-scenarios" name="validatedScenarios" label="Проверенные сценарии" value={validatedScenarios} onChange={(event) => setValidatedScenarios(event.target.value)} multiline minRows={2} required />
+            <TextField id="risk-policy-choam-impact" name="choamImpact" label="Влияние на CHOAM" value={choamImpact} onChange={(event) => setChoamImpact(event.target.value)} multiline minRows={2} required />
             <Button startIcon={<Save />} variant="contained" onClick={() => run('Политика риска обновлена', () => api('/risk-policy', {
               method: 'PATCH',
               body: JSON.stringify({
                 version: `policy-${Date.now()}`,
                 warningThreshold,
                 blockThreshold,
-                formulaDescription: policy?.formulaDescription || 'Детерминированная формула P(attack) и risk-score'
+                formulaDescription: policy?.formulaDescription || 'Детерминированная формула P(attack) и risk-score',
+                changeReason,
+                validatedScenarios,
+                choamImpact
               })
-            }))}>Сохранить пороги</Button>
+            }))} disabled={!changeReason.trim() || !validatedScenarios.trim() || !choamImpact.trim()}>Сохранить пороги</Button>
           </Stack>
         </Panel>
       </Grid>

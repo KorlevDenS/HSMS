@@ -658,6 +658,46 @@
         }
       }
     },
+    "/api/v1/incidents/{incidentId}/evacuation/cancel": {
+      "post": {
+        "tags": [
+          "hsms-api-controller"
+        ],
+        "operationId": "cancelEvacuation",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvacuationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvacuationCommandDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/incidents/{incidentId}/evacuation/delivered": {
       "post": {
         "tags": [
@@ -2759,6 +2799,11 @@
       },
       "RiskPolicyUpdateRequest": {
         "type": "object",
+        "required": [
+          "changeReason",
+          "validatedScenarios",
+          "choamImpact"
+        ],
         "properties": {
           "version": {
             "type": "string"
@@ -2772,6 +2817,15 @@
             "format": "int32"
           },
           "formulaDescription": {
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "validatedScenarios": {
+            "type": "string"
+          },
+          "choamImpact": {
             "type": "string"
           }
         }
@@ -2800,6 +2854,18 @@
           "activeFrom": {
             "type": "string",
             "format": "date-time"
+          },
+          "changedBy": {
+            "type": "string"
+          },
+          "changeReason": {
+            "type": "string"
+          },
+          "validatedScenarios": {
+            "type": "string"
+          },
+          "choamImpact": {
+            "type": "string"
           }
         }
       },

@@ -38,6 +38,10 @@ import static com.hsms.backend.common.HsmsOps.*;
 @Transactional
 public class RiskScoreService implements RiskApi {
 
+    private static final int MAX_BLOCKING_THRESHOLD = 90;
+    private static final double ACTIVE_MISSION_TELEMETRY_GAP_PENALTY = 0.45;
+    private static final double DEGRADED_TELEMETRY_PENALTY = 0.35;
+
     private final HsmsAccessService access;
     private final HsmsAuditService audit;
     private final HsmsDtoAssembler dto;
@@ -80,8 +84,12 @@ public class RiskScoreService implements RiskApi {
         RiskPolicyDto active = dto.activeRiskPolicy();
         int warning = request == null || request.warningThreshold() == null ? active.warningThreshold() : request.warningThreshold();
         int block = request == null || request.blockThreshold() == null ? active.blockThreshold() : request.blockThreshold();
-        if (warning < 0 || warning > 100 || block < 0 || block > 100 || warning >= block) {
-            throw badRequest("Пороговые значения риска заполнены неверно", "Укажите warningThreshold меньше blockThreshold в диапазоне 0–100.");
+        String changeReason = requirePolicyText(request == null ? null : request.changeReason(), "основание изменения политики риска");
+        String validatedScenarios = requirePolicyText(request == null ? null : request.validatedScenarios(), "проверенные эталонные сценарии риска");
+        String choamImpact = requirePolicyText(request == null ? null : request.choamImpact(), "влияние политики риска на страховой контур CHOAM");
+        if (warning < 0 || warning > 100 || block < 0 || block > MAX_BLOCKING_THRESHOLD || warning >= block) {
+            throw badRequest("Пороговые значения риска заполнены неверно",
+                    "Укажите warningThreshold меньше blockThreshold, warningThreshold в диапазоне 0–100 и blockThreshold не выше " + MAX_BLOCKING_THRESHOLD + ".");
         }
 
         riskPolicyRepository.findByActiveTrue().forEach(policy -> policy.setActive(false));
@@ -92,19 +100,25 @@ public class RiskScoreService implements RiskApi {
         policy.setBlockThreshold(block);
         policy.setFormulaDescription(blankToDefault(request == null ? null : request.formulaDescription(), active.formulaDescription()));
         policy.setActiveFrom(now);
+        policy.setChangedBy(actor.getLogin());
+        policy.setChangeReason(changeReason);
+        policy.setValidatedScenarios(validatedScenarios);
+        policy.setChoamImpact(choamImpact);
         policy.setActive(true);
         RiskPolicy saved = riskPolicyRepository.saveAndFlush(policy);
-        audit.record(actor, "RISK_POLICY_UPDATED", "risk_policy", saved.getId(), null, Map.of(
-                "owner", actor.getLogin(),
-                "reason", "Административное изменение политики риска",
-                "previousVersion", active.version(),
-                "previousWarningThreshold", active.warningThreshold(),
-                "previousBlockThreshold", active.blockThreshold(),
-                "previousFormulaDescription", active.formulaDescription(),
-                "newVersion", saved.getVersion(),
-                "newWarningThreshold", warning,
-                "newBlockThreshold", block,
-                "newFormulaDescription", saved.getFormulaDescription()
+        audit.record(actor, "RISK_POLICY_UPDATED", "risk_policy", saved.getId(), null, Map.ofEntries(
+                Map.entry("owner", actor.getLogin()),
+                Map.entry("reason", changeReason),
+                Map.entry("previousVersion", active.version()),
+                Map.entry("previousWarningThreshold", active.warningThreshold()),
+                Map.entry("previousBlockThreshold", active.blockThreshold()),
+                Map.entry("previousFormulaDescription", active.formulaDescription()),
+                Map.entry("newVersion", saved.getVersion()),
+                Map.entry("newWarningThreshold", warning),
+                Map.entry("newBlockThreshold", block),
+                Map.entry("newFormulaDescription", saved.getFormulaDescription()),
+                Map.entry("validatedScenarios", validatedScenarios),
+                Map.entry("choamImpact", choamImpact)
         ));
         return dto.activeRiskPolicy();
     }
@@ -149,6 +163,7 @@ public class RiskScoreService implements RiskApi {
         HarvesterDto harvester = dto.requireHarvester(mission.harvesterId());
         RiskPolicy policy = dto.activeRiskPolicyEntity();
         TelemetryEventDto latestTelemetry = dto.latestAcceptedTelemetry(missionId).orElse(null);
+        boolean telemetryMissingForActiveMission = latestTelemetry == null && mission.status() == MissionStatus.ACTIVE;
 
         double zoneRiskLevel = zone.riskLevel();
         double harvesterNoiseLevel = harvester.noiseLevel();
@@ -170,7 +185,7 @@ public class RiskScoreService implements RiskApi {
                 + incidentPenalty * 10);
         riskScoreValue = Math.max(0, Math.min(100, riskScoreValue));
         DecisionZone decisionZone = decisionZone(riskScoreValue, policy);
-        DataQuality quality = telemetryPenalty >= 0.25 ? DataQuality.DEGRADED : DataQuality.FRESH;
+        DataQuality quality = dataQuality(telemetryMissingForActiveMission, telemetryPenalty);
 
         Instant now = Instant.now();
         RiskScore risk = new RiskScore();
@@ -220,12 +235,22 @@ public class RiskScoreService implements RiskApi {
 
     private double telemetryPenalty(TelemetryEventDto latestTelemetry, MissionStatus missionStatus) {
         if (latestTelemetry != null) {
-            return latestTelemetry.freshnessStatus() == FreshnessStatus.ACCEPTED ? 0.0 : 0.35;
+            return latestTelemetry.freshnessStatus() == FreshnessStatus.ACCEPTED ? 0.0 : DEGRADED_TELEMETRY_PENALTY;
         }
         if (missionStatus == MissionStatus.ACTIVE) {
-            return 0.25;
+            return ACTIVE_MISSION_TELEMETRY_GAP_PENALTY;
         }
         return 0.0;
+    }
+
+    private DataQuality dataQuality(boolean telemetryMissingForActiveMission, double telemetryPenalty) {
+        if (telemetryMissingForActiveMission) {
+            return DataQuality.STALE;
+        }
+        if (telemetryPenalty >= DEGRADED_TELEMETRY_PENALTY) {
+            return DataQuality.DEGRADED;
+        }
+        return DataQuality.FRESH;
     }
 
     private int markOpenRiskSnapshotsStale(long missionId, String staleReason) {
@@ -270,5 +295,12 @@ public class RiskScoreService implements RiskApi {
             return 0.5;
         }
         return 0.1;
+    }
+
+    private String requirePolicyText(String value, String field) {
+        if (!hasText(value)) {
+            throw badRequest("Не указано " + field, "Заполните основание, проверенные сценарии и влияние на CHOAM перед изменением risk policy.");
+        }
+        return value.trim();
     }
 }

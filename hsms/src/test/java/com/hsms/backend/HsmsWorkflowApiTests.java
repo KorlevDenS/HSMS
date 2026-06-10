@@ -314,11 +314,16 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
                 "version", "it-policy-2",
                 "warningThreshold", 45,
                 "blockThreshold", 90,
-                "formulaDescription", "Интеграционный тест изменения порогов риска"
+                "formulaDescription", "Интеграционный тест изменения порогов риска",
+                "changeReason", "Проверка управляемого изменения политики риска",
+                "validatedScenarios", "normal launch, warning launch, blocking risk, degraded telemetry, incident, CHOAM insurance",
+                "choamImpact", "Policy version is preserved in risk snapshots and insurance decisions"
         ));
         assertThat(policy.get("version")).isEqualTo("it-policy-2");
         assertThat(policy.get("warningThreshold")).isEqualTo(45);
         assertThat(policy.get("blockThreshold")).isEqualTo(90);
+        assertThat(policy.get("changedBy")).isEqualTo("admin");
+        assertThat(policy.get("changeReason")).isEqualTo("Проверка управляемого изменения политики риска");
 
         long harvesterId = firstId("dispatcher", "/harvesters/free");
         long crewId = firstId("dispatcher", "/crews/free");
@@ -373,7 +378,10 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
                 "version", "it-policy-forbidden",
                 "warningThreshold", 40,
                 "blockThreshold", 80,
-                "formulaDescription", "Недопустимое изменение надзором"
+                "formulaDescription", "Недопустимое изменение надзором",
+                "changeReason", "Надзор не должен менять risk policy напрямую",
+                "validatedScenarios", "normal launch, warning launch, blocking risk, degraded telemetry, incident, CHOAM insurance",
+                "choamImpact", "CHOAM impact is not approved by administrator"
         ))).isEqualTo(403);
 
         Map<String, Object> crewBootstrap = getJson("crew", "/bootstrap");
@@ -452,6 +460,107 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
                 "reason", "Канал связи не подтвердил доставку"
         ));
         assertThat(failed.get("status")).isEqualTo("DELIVERY_FAILED");
+    }
+
+    @Test
+    void riskListGovernanceTelemetryAndEvacuationControlsAreEnforced() {
+        assertThat(status("admin", "PATCH", "/risk-policy", Map.of(
+                "version", "it-policy-without-context",
+                "warningThreshold", 40,
+                "blockThreshold", 80,
+                "formulaDescription", "Политика без обязательного основания"
+        ))).isEqualTo(400);
+        assertThat(status("admin", "PATCH", "/risk-policy", Map.of(
+                "version", "it-policy-too-soft",
+                "warningThreshold", 60,
+                "blockThreshold", 95,
+                "formulaDescription", "Недопустимо мягкий блокирующий порог",
+                "changeReason", "Попытка смягчить политику под добычные квоты",
+                "validatedScenarios", "normal launch, warning launch, blocking risk, degraded telemetry, incident, CHOAM insurance",
+                "choamImpact", "CHOAM must still receive traceable policy versions"
+        ))).isEqualTo(400);
+
+        Map<String, Object> harvester = post("dispatcher", "/harvesters", Map.of(
+                "name", "HV-IT-RISKLIST",
+                "type", "HEAVY",
+                "status", "READY",
+                "noiseLevel", 0.55,
+                "capacity", 140
+        ));
+        Map<String, Object> crew = post("dispatcher", "/crews", Map.of(
+                "name", "Экипаж IT RiskList",
+                "status", "READY",
+                "contactChannel", "it-risklist",
+                "memberCount", 5,
+                "assignedLogin", "crew"
+        ));
+        Map<String, Object> mission = post("dispatcher", "/missions", Map.of(
+                "title", "Рейс проверки RiskList",
+                "zoneId", 2,
+                "harvesterId", id(harvester),
+                "crewId", id(crew),
+                "plannedStart", Instant.now().plusSeconds(3600).toString(),
+                "plannedEnd", Instant.now().plusSeconds(10800).toString(),
+                "route", List.of(
+                        Map.of("seqNo", 1, "lat", 22.11, "lon", 53.91),
+                        Map.of("seqNo", 2, "lat", 22.30, "lon", 54.10)
+                )
+        ));
+        long missionId = id(mission);
+        post("dispatcher", "/missions/" + missionId + "/risk-assessments", Map.of());
+        post("dispatcher", "/missions/" + missionId + "/launch", Map.of(
+                "confirmWarning", true,
+                "reason", "Запуск для проверки деградации телеметрии"
+        ));
+
+        Map<String, Object> staleTelemetry = post("crew", "/missions/" + missionId + "/telemetry", Map.of(
+                "externalEventId", "it-risklist-stale-telemetry",
+                "eventTime", Instant.now().minusSeconds(900).toString(),
+                "lat", 22.21,
+                "lon", 54.01,
+                "equipmentStatus", "NORMAL"
+        ));
+        assertThat(staleTelemetry.get("status")).isEqualTo("STALE");
+        assertThat(staleTelemetry.get("riskMarkedStale")).isEqualTo(true);
+        Map<String, Object> missionAfterStaleTelemetry = getJson("dispatcher", "/missions/" + missionId);
+        assertThat(((Number) missionAfterStaleTelemetry.get("monitoringPriority")).intValue()).isGreaterThanOrEqualTo(70);
+        assertThat((String) missionAfterStaleTelemetry.get("monitoringContext")).contains("устарела");
+
+        Map<String, Object> staleRisk = post("dispatcher", "/missions/" + missionId + "/risk-assessments", Map.of());
+        assertThat(staleRisk.get("dataQuality")).isEqualTo("STALE");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> staleFactors = (Map<String, Object>) staleRisk.get("factors");
+        assertThat(((Number) staleFactors.get("telemetryQualityPenalty")).doubleValue()).isGreaterThanOrEqualTo(0.45);
+
+        Map<String, Object> alarm = post("admin", "/missions/" + missionId + "/alarms", Map.of(
+                "externalEventId", "it-risklist-critical-alarm",
+                "eventTime", Instant.now().toString(),
+                "reason", "Проверка обязательного подтверждения эвакуации"
+        ));
+        long incidentId = ((Number) alarm.get("incidentId")).longValue();
+        patch("security", "/incidents/" + incidentId + "/classification", Map.of(
+                "severity", "CRITICAL",
+                "reason", "Критичный сценарий RiskList"
+        ));
+        assertThat(status("security", "POST", "/incidents/" + incidentId + "/close", Map.of())).isEqualTo(400);
+
+        Map<String, Object> evacuation = post("security", "/incidents/" + incidentId + "/evacuation", Map.of(
+                "reason", "Проверка отмены команды эвакуации"
+        ));
+        assertThat(evacuation.get("status")).isEqualTo("SENT");
+        Map<String, Object> cancelled = post("security", "/incidents/" + incidentId + "/evacuation/cancel", Map.of(
+                "reason", "Учебная отмена команды до подтверждения экипажа"
+        ));
+        assertThat(cancelled.get("status")).isEqualTo("CANCELLED");
+        assertThat(status("security", "POST", "/incidents/" + incidentId + "/close", Map.of())).isEqualTo(400);
+
+        post("security", "/incidents/" + incidentId + "/evacuation", Map.of(
+                "reason", "Повторная команда после отмены"
+        ));
+        post("admin", "/incidents/" + incidentId + "/evacuation/delivered", Map.of());
+        post("admin", "/incidents/" + incidentId + "/evacuation/ack", Map.of());
+        Map<String, Object> closedIncident = post("security", "/incidents/" + incidentId + "/close", Map.of());
+        assertThat(closedIncident.get("status")).isEqualTo("CLOSED");
     }
 
     private Map<String, Object> post(String actor, String path, Object body) {

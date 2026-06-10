@@ -188,7 +188,8 @@ public class HarvesterService implements HarvesterApi {
         Instant now = Instant.now();
         TelemetryEventDto last = dto.latestAcceptedTelemetry(missionId).orElse(null);
         Instant eventTime = request.eventTime() == null ? now : request.eventTime();
-        FreshnessStatus freshness = last != null && eventTime.isBefore(last.eventTime())
+        telemetryService.validateEventTime(eventTime, now);
+        FreshnessStatus freshness = (last != null && eventTime.isBefore(last.eventTime())) || telemetryService.isDelayed(eventTime, now)
                 ? FreshnessStatus.STALE
                 : FreshnessStatus.ACCEPTED;
 
@@ -208,28 +209,35 @@ public class HarvesterService implements HarvesterApi {
 
         boolean riskMarkedStale = false;
         TelemetryEventDto savedDto = dto.telemetryByExternalId(missionId, externalEventId).orElseThrow();
-        if (freshness == FreshnessStatus.ACCEPTED && shouldInvalidateRisk(last, savedDto)) {
-            String reason = "Факторы телеметрии изменились";
-            riskApi.markRiskStaleAfterDomainChange(actorLogin, missionId, reason);
-            Mission missionEntity = dto.missionEntity(missionId);
-            missionEntity.setRiskReviewRequiredAt(now);
-            missionEntity.setRiskReviewReason(reason);
-            riskMarkedStale = true;
+        if (freshness == FreshnessStatus.STALE) {
+            riskMarkedStale = invalidateRiskForTelemetry(actorLogin, actor, missionId, now, "Пакет телеметрии устарел или пришел не по порядку", 70,
+                    "Требуется ручная проверка: телеметрия устарела или пришла не по порядку.");
+        } else if (shouldInvalidateRisk(last, savedDto)) {
             int priority = monitoringPriority(savedDto.equipmentStatus());
-            if (priority > missionEntity.getMonitoringPriority()) {
-                missionEntity.setMonitoringPriority(priority);
-                missionEntity.setMonitoringContext("Телеметрия указывает на ухудшение оборудования: " + savedDto.equipmentStatus());
-                audit.record(actor, "MISSION_MONITORING_PRIORITY_RAISED", "mission", missionId, missionId, Map.of(
-                        "priority", priority,
-                        "equipmentStatus", savedDto.equipmentStatus()
-                ));
-            }
+            riskMarkedStale = invalidateRiskForTelemetry(actorLogin, actor, missionId, now, "Факторы телеметрии изменились", priority,
+                    "Телеметрия указывает на ухудшение оборудования: " + savedDto.equipmentStatus());
         }
         audit.record(actor, "TELEMETRY_RECEIVED", "telemetry_event", saved.getId(), missionId, Map.of(
                 "freshness", freshness.name(),
                 "riskMarkedStale", riskMarkedStale
         ));
         return new TelemetryResponse(saved.getId(), freshness, riskMarkedStale, savedDto);
+    }
+
+    private boolean invalidateRiskForTelemetry(String actorLogin, HsmsUser actor, long missionId, Instant now, String reason, int priority, String context) {
+        riskApi.markRiskStaleAfterDomainChange(actorLogin, missionId, reason);
+        Mission missionEntity = dto.missionEntity(missionId);
+        missionEntity.setRiskReviewRequiredAt(now);
+        missionEntity.setRiskReviewReason(reason);
+        if (priority > missionEntity.getMonitoringPriority()) {
+            missionEntity.setMonitoringPriority(priority);
+            missionEntity.setMonitoringContext(context);
+            audit.record(actor, "MISSION_MONITORING_PRIORITY_RAISED", "mission", missionId, missionId, Map.of(
+                    "priority", priority,
+                    "context", context
+            ));
+        }
+        return true;
     }
 
     @Override

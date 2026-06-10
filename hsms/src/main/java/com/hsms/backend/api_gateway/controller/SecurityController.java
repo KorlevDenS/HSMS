@@ -93,6 +93,16 @@ public class SecurityController extends HsmsControllerSupport {
         return securityApi.markEvacuationDeliveryFailed(actor(authentication), incidentId, request);
     }
 
+    @PostMapping("/incidents/{incidentId}/evacuation/cancel")
+    @PreAuthorize("hasAnyAuthority('ROLE_SECURITY_HEADQUARTERS_OPERATOR','ROLE_ADMINISTRATOR')")
+    public EvacuationCommandDto cancelEvacuation(
+            Authentication authentication,
+            @PathVariable long incidentId,
+            @RequestBody(required = false) EvacuationRequest request
+    ) {
+        return securityApi.cancelEvacuation(actor(authentication), incidentId, request);
+    }
+
     @PostMapping("/incidents/{incidentId}/close")
     @PreAuthorize("hasAnyAuthority('ROLE_SECURITY_HEADQUARTERS_OPERATOR','ROLE_ADMINISTRATOR')")
     public IncidentDto closeIncident(Authentication authentication, @PathVariable long incidentId) {

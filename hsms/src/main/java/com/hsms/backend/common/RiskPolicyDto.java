@@ -8,6 +8,10 @@ public record RiskPolicyDto(
             int warningThreshold,
             int blockThreshold,
             String formulaDescription,
-            Instant activeFrom
+            Instant activeFrom,
+            String changedBy,
+            String changeReason,
+            String validatedScenarios,
+            String choamImpact
     ) {
     }
