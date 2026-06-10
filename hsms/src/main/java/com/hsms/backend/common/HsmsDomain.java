@@ -214,15 +214,45 @@ public final class HsmsDomain {
         }
     }
 
-    public record MissionPatchRequest(
-            String title,
-            Long zoneId,
-            Long harvesterId,
-            Long crewId,
-            Instant plannedStart,
-            Instant plannedEnd,
-            List<RoutePointDto> route
-    ) {
+    public static class MissionPatchRequest {
+        public String title;
+        public Long zoneId;
+        public Long harvesterId;
+        public Long crewId;
+        public Instant plannedStart;
+        public Instant plannedEnd;
+        public List<RoutePointDto> route;
+
+        public MissionPatchRequest() {
+        }
+
+        public String title() {
+            return title;
+        }
+
+        public Long zoneId() {
+            return zoneId;
+        }
+
+        public Long harvesterId() {
+            return harvesterId;
+        }
+
+        public Long crewId() {
+            return crewId;
+        }
+
+        public Instant plannedStart() {
+            return plannedStart;
+        }
+
+        public Instant plannedEnd() {
+            return plannedEnd;
+        }
+
+        public List<RoutePointDto> route() {
+            return route;
+        }
     }
 
     public record MissionDto(

@@ -249,6 +249,66 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
     }
 
     @Test
+    void missionRouteCanBeReplacedWithReusedSequenceNumbers() {
+        Map<String, Object> harvester = post("dispatcher", "/harvesters", Map.of(
+                "name", "HV-IT-ROUTE-REPLACE",
+                "type", "STANDARD",
+                "status", "READY",
+                "noiseLevel", 0.31,
+                "capacity", 115
+        ));
+        Map<String, Object> crew = post("dispatcher", "/crews", Map.of(
+                "name", "Экипаж IT замены маршрута",
+                "status", "READY",
+                "contactChannel", "it-route-replace",
+                "memberCount", 4,
+                "assignedLogin", "crew"
+        ));
+        Map<String, Object> mission = post("dispatcher", "/missions", Map.of(
+                "title", "Рейс проверки замены маршрута",
+                "zoneId", 2,
+                "harvesterId", id(harvester),
+                "crewId", id(crew),
+                "plannedStart", Instant.now().plusSeconds(5400).toString(),
+                "plannedEnd", Instant.now().plusSeconds(10800).toString(),
+                "route", List.of(
+                        Map.of("seqNo", 1, "lat", 22.10, "lon", 53.90),
+                        Map.of("seqNo", 2, "lat", 22.20, "lon", 54.00),
+                        Map.of("seqNo", 3, "lat", 22.30, "lon", 54.10)
+                )
+        ));
+        long missionId = id(mission);
+        assertThat(((Number) mission.get("routeVersion")).intValue()).isEqualTo(1);
+
+        Map<String, Object> firstReplacement = patch("dispatcher", "/missions/" + missionId, Map.of(
+                "route", List.of(
+                        Map.of("seqNo", 1, "lat", 23.10, "lon", 55.10),
+                        Map.of("seqNo", 2, "lat", 23.20, "lon", 55.20),
+                        Map.of("seqNo", 3, "lat", 23.30, "lon", 55.30)
+                )
+        ));
+        assertThat(firstReplacement.get("status")).isEqualTo("RISK_ASSESSED");
+        assertThat(((Number) firstReplacement.get("routeVersion")).intValue()).isEqualTo(2);
+        assertRoutePoint(firstReplacement, 0, 1, 23.10, 55.10);
+        assertRoutePoint(firstReplacement, 1, 2, 23.20, 55.20);
+        assertRoutePoint(firstReplacement, 2, 3, 23.30, 55.30);
+
+        Map<String, Object> secondReplacement = patch("dispatcher", "/missions/" + missionId, Map.of(
+                "route", List.of(
+                        Map.of("seqNo", 1, "lat", 24.10, "lon", 56.10),
+                        Map.of("seqNo", 2, "lat", 24.20, "lon", 56.20)
+                )
+        ));
+        assertThat(secondReplacement.get("status")).isEqualTo("RISK_ASSESSED");
+        assertThat(((Number) secondReplacement.get("routeVersion")).intValue()).isEqualTo(3);
+        assertRoutePoint(secondReplacement, 0, 1, 24.10, 56.10);
+        assertRoutePoint(secondReplacement, 1, 2, 24.20, 56.20);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> route = (List<Map<String, Object>>) secondReplacement.get("route");
+        assertThat(route).hasSize(2);
+    }
+
+    @Test
     void alternativeSecurityAndPolicyFlowsWorkThroughHttpApi() {
         Map<String, Object> policy = patch("admin", "/risk-policy", Map.of(
                 "version", "it-policy-2",
@@ -505,5 +565,15 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
 
     private long id(Map<String, Object> map) {
         return ((Number) map.get("id")).longValue();
+    }
+
+    private void assertRoutePoint(Map<String, Object> mission, int index, int seqNo, double lat, double lon) {
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> route = (List<Map<String, Object>>) mission.get("route");
+        assertThat(route).hasSizeGreaterThan(index);
+        Map<String, Object> point = route.get(index);
+        assertThat(((Number) point.get("seqNo")).intValue()).isEqualTo(seqNo);
+        assertThat(((Number) point.get("lat")).doubleValue()).isEqualTo(lat);
+        assertThat(((Number) point.get("lon")).doubleValue()).isEqualTo(lon);
     }
 }

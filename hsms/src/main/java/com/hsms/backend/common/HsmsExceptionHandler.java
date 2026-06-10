@@ -3,6 +3,7 @@ package com.hsms.backend.common;
 import com.hsms.backend.common.HsmsDomain.ApiError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,6 +26,12 @@ public class HsmsExceptionHandler {
     public ResponseEntity<ApiError> validation(MethodArgumentNotValidException exception) {
         return ResponseEntity.badRequest()
                 .body(new ApiError("Некорректные данные запроса", "Проверьте обязательные поля формы.", 400, Instant.now()));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> unreadableRequest(HttpMessageNotReadableException exception) {
+        return ResponseEntity.badRequest()
+                .body(new ApiError("Некорректное тело запроса", "Проверьте JSON и типы передаваемых полей.", 400, Instant.now()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

@@ -113,11 +113,19 @@ public class Mission {
     @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MissionRoute> route = new ArrayList<>();
 
-    public void replaceRoute(List<MissionRoute> points) {
+    public void clearRoute() {
         route.clear();
+    }
+
+    public void appendRoute(List<MissionRoute> points) {
         points.forEach(point -> {
             point.setMission(this);
             route.add(point);
         });
+    }
+
+    public void replaceRoute(List<MissionRoute> points) {
+        clearRoute();
+        appendRoute(points);
     }
 }

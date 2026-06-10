@@ -157,7 +157,7 @@ public class MissionService implements MissionApi {
         }
         mission.setUpdatedAt(now);
         if (routeChanged) {
-            replaceRoute(mission, route);
+            replacePersistedRoute(mission, route);
         }
         missionRepository.saveAndFlush(mission);
         audit.record(actor, "MISSION_UPDATED", "mission", missionId, missionId, Map.of(
@@ -484,6 +484,16 @@ public class MissionService implements MissionApi {
     }
 
     private void replaceRoute(Mission mission, List<RoutePointDto> route) {
+        mission.replaceRoute(routePoints(route));
+    }
+
+    private void replacePersistedRoute(Mission mission, List<RoutePointDto> route) {
+        mission.clearRoute();
+        missionRepository.flush();
+        mission.appendRoute(routePoints(route));
+    }
+
+    private List<MissionRoute> routePoints(List<RoutePointDto> route) {
         List<MissionRoute> points = new java.util.ArrayList<>();
         for (int index = 0; index < route.size(); index++) {
             RoutePointDto point = route.get(index);
@@ -493,7 +503,7 @@ public class MissionService implements MissionApi {
             entity.setLon(point.lon());
             points.add(entity);
         }
-        mission.replaceRoute(points);
+        return points;
     }
 
     private com.hsms.backend.common.model.MiningZone resolveZone(Long zoneId) {
