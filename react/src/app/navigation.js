@@ -8,15 +8,14 @@ import {
   Route
 } from '@mui/icons-material';
 
-// TODO should be gotten fom backend
 export const roles = [
-  ['dispatcher', 'Диспетчер', 'ROLE_SUPPLY_MANAGER'],
+  ['dispatcher', 'Диспетчер снабжения', 'ROLE_SUPPLY_MANAGER'],
   ['crew1', 'Экипаж №1 Альфа', 'ROLE_HARVESTER_CREW'],
-  ['crew2', 'Экипаж №2 Бетта2', 'ROLE_HARVESTER_CREW'],
+  ['crew2', 'Экипаж №2 Бетта', 'ROLE_HARVESTER_CREW'],
   ['crew3', 'Экипаж №3 Гамма', 'ROLE_HARVESTER_CREW'],
-  ['security', 'Штаб безопасности', 'ROLE_SECURITY_HEADQUARTERS_OPERATOR'],
-  ['insurance', 'Страхование', 'ROLE_INSURANCE_CONTOUR_OPERATOR'],
-  ['management', 'Руководство', 'ROLE_OPERATIONS_MANAGEMENT'],
+  ['security', 'Оператор штаба', 'ROLE_SECURITY_HEADQUARTERS_OPERATOR'],
+  ['insurance', 'Оператор страхового контура', 'ROLE_INSURANCE_CONTOUR_OPERATOR'],
+  ['management', 'Руководство операций', 'ROLE_OPERATIONS_MANAGEMENT'],
   ['admin', 'Администратор', 'ROLE_ADMINISTRATOR']
 ];
 

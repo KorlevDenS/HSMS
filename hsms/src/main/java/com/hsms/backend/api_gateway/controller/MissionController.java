@@ -49,7 +49,7 @@ public class MissionController extends HsmsControllerSupport {
     }
 
     @GetMapping("/missions/{missionId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPPLY_MANAGER','ROLE_HARVESTER_CREW','ROLE_SECURITY_HEADQUARTERS_OPERATOR','ROLE_INSURANCE_CONTOUR_OPERATOR','ROLE_OPERATIONS_MANAGEMENT','ROLE_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPPLY_MANAGER','ROLE_HARVESTER_CREW','ROLE_SECURITY_HEADQUARTERS_OPERATOR','ROLE_INSURANCE_CONTOUR_OPERATOR','ROLE_OPERATIONS_MANAGEMENT','ROLE_ADMINISTRATOR') and @missionService.canAccessMission(#missionId, authentication.principal.id)")
     public MissionDto mission(@PathVariable long missionId) {
         return missionApi.mission(missionId);
     }
@@ -97,19 +97,19 @@ public class MissionController extends HsmsControllerSupport {
     }
 
     @GetMapping("/missions/{missionId}/plan")
-    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_SUPPLY_MANAGER','ROLE_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_SUPPLY_MANAGER','ROLE_ADMINISTRATOR') and @missionService.canAccessMission(#missionId, authentication.principal.id)")
     public MissionPlanDto missionPlan(Authentication authentication, @PathVariable long missionId) {
         return missionApi.missionPlan(actor(authentication), missionId);
     }
 
     @PostMapping("/missions/{missionId}/plan/ack")
-    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_ADMINISTRATOR') and @missionService.canAccessMission(#missionId, authentication.principal.id)")
     public MissionPlanDto acknowledgePlan(Authentication authentication, @PathVariable long missionId) {
         return missionApi.acknowledgePlan(actor(authentication), missionId);
     }
 
     @PostMapping("/missions/{missionId}/report")
-    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_ADMINISTRATOR') and @missionService.canAccessMission(#missionId, authentication.principal.id)")
     public MissionDto submitReport(
             Authentication authentication,
             @PathVariable long missionId,

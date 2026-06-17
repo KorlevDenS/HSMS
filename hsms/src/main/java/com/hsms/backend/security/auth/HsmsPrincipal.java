@@ -4,6 +4,7 @@ import com.hsms.backend.common.RoleCode;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.security.Principal;
 import java.util.Collection;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public record HsmsPrincipal(
         String login,
         String displayName,
         Set<RoleCode> roles
-) {
+) implements Principal {
     public HsmsPrincipal {
         roles = roles == null ? Set.of() : Set.copyOf(roles);
     }
@@ -26,5 +27,10 @@ public record HsmsPrincipal(
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.name()))
                 .toList();
+    }
+
+    @Override
+    public String getName() {
+        return login;
     }
 }

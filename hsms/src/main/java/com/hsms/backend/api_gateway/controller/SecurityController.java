@@ -30,7 +30,7 @@ public class SecurityController extends HsmsControllerSupport {
     }
 
     @PostMapping("/missions/{missionId}/alarms")
-    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_ADMINISTRATOR') and @missionService.canAccessMission(#missionId, authentication.principal.id)")
     public AlarmResponse submitAlarm(
             Authentication authentication,
             @PathVariable long missionId,

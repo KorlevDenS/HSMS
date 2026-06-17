@@ -23,6 +23,7 @@ import com.hsms.backend.common.MissionDto;
 import com.hsms.backend.common.RoleCode;
 import com.hsms.backend.common.UserCreateRequest;
 import com.hsms.backend.common.UserRoleUpdateRequest;
+import com.hsms.backend.harvester.api.HarvesterApi;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
 import com.hsms.backend.security.auth.HsmsPrincipal;
 import com.hsms.backend.security.auth.HsmsTokenService;
@@ -49,6 +50,7 @@ public class AuthService implements AuthApi {
     private final HsmsAccessService access;
     private final HsmsAuditService audit;
     private final HsmsDtoAssembler dto;
+    private final HarvesterApi harvesterApi;
     private final PasswordEncoder passwordEncoder;
     private final HsmsTokenService tokenService;
 
@@ -58,6 +60,7 @@ public class AuthService implements AuthApi {
             HsmsAccessService access,
             HsmsAuditService audit,
             HsmsDtoAssembler dto,
+            HarvesterApi harvesterApi,
             PasswordEncoder passwordEncoder,
             HsmsTokenService tokenService
     ) {
@@ -66,6 +69,7 @@ public class AuthService implements AuthApi {
         this.access = access;
         this.audit = audit;
         this.dto = dto;
+        this.harvesterApi = harvesterApi;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
     }
@@ -207,9 +211,7 @@ public class AuthService implements AuthApi {
             return dto.crews();
         }
         if (hasAny(roles, RoleCode.ROLE_HARVESTER_CREW)) {
-            return dto.crews().stream()
-                    .filter(crew -> user.getLogin().equals(crew.assignedLogin()))
-                    .toList();
+            return harvesterApi.crewsByUser(user.getId());
         }
         return List.of();
     }

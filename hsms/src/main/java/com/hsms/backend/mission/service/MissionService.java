@@ -86,10 +86,34 @@ public class MissionService implements MissionApi {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean canAccessMission(Long missionId, Long userId) {
+        if (missionId == null || userId == null) {
+            return false;
+        }
+        HsmsUser user = access.requireUser(userId);
+        Set<RoleCode> roles = access.roles(user);
+        if (hasAny(roles,
+                RoleCode.ROLE_SUPPLY_MANAGER,
+                RoleCode.ROLE_SECURITY_HEADQUARTERS_OPERATOR,
+                RoleCode.ROLE_INSURANCE_CONTOUR_OPERATOR,
+                RoleCode.ROLE_OPERATIONS_MANAGEMENT,
+                RoleCode.ROLE_ADMINISTRATOR)) {
+            return true;
+        }
+        return roles.contains(RoleCode.ROLE_HARVESTER_CREW) && isMissionOfThisCrew(missionId, userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public boolean isMissionOfThisCrew(Long missionId, Long userId) {
-        Mission mission = missionRepository.findById(missionId).orElseThrow();
-        CrewDto crewDto = harvesterApi.crewByUser(userId);
-        return mission.getCrew().getId() == crewDto.id();
+        if (missionId == null || userId == null) {
+            return false;
+        }
+        return missionRepository.findById(missionId)
+                .map(Mission::getCrew)
+                .map(crew -> harvesterApi.isCrewAssignedToUser(userId, crew.getId()))
+                .orElse(false);
     }
 
     @Override
@@ -580,9 +604,13 @@ public class MissionService implements MissionApi {
         if (mission.getCrew() == null) {
             throw badRequest("Экипаж рейса не назначен", "Сначала заполните экипаж рейса.");
         }
-        if (!actor.getLogin().equals(mission.getCrew().getAssignedLogin())) {
+        if (!isMissionOfThisCrew(missionId, actor.getId())) {
             throw forbidden("Экипаж не назначен на этот рейс", action);
         }
+    }
+
+    private boolean hasAny(Set<RoleCode> roles, RoleCode... expected) {
+        return Arrays.stream(expected).anyMatch(roles::contains);
     }
 
     private List<RoutePointDto> nullToEmpty(List<RoutePointDto> route) {

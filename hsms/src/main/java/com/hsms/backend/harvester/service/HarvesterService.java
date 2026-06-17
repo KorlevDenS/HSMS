@@ -1,6 +1,7 @@
 package com.hsms.backend.harvester.service;
 
 import com.hsms.backend.auth.model.HsmsUser;
+import com.hsms.backend.auth.repository.HsmsUserRepository;
 import com.hsms.backend.common.HsmsAccessService;
 import com.hsms.backend.common.HsmsAuditService;
 import com.hsms.backend.common.CrewCreateRequest;
@@ -18,6 +19,7 @@ import com.hsms.backend.common.TelemetryResponse;
 import com.hsms.backend.harvester.api.HarvesterApi;
 import com.hsms.backend.harvester.model.Crew;
 import com.hsms.backend.harvester.model.CrewMember;
+import com.hsms.backend.harvester.model.CrewMemberId;
 import com.hsms.backend.harvester.model.Harvester;
 import com.hsms.backend.harvester.model.TelemetryEvent;
 import com.hsms.backend.harvester.repository.CrewMemberRepository;
@@ -54,6 +56,7 @@ public class HarvesterService implements HarvesterApi {
     private final Counter receivedTelemetry;
     private final TelemetryService telemetryService;
     private final CrewMemberRepository crewMemberRepository;
+    private final HsmsUserRepository userRepository;
 
     public HarvesterService(
             HsmsAccessService access,
@@ -65,7 +68,8 @@ public class HarvesterService implements HarvesterApi {
             RiskApi riskApi,
             MeterRegistry meterRegistry,
             TelemetryService telemetryService,
-            CrewMemberRepository crewMemberRepository) {
+            CrewMemberRepository crewMemberRepository,
+            HsmsUserRepository userRepository) {
         this.access = access;
         this.audit = audit;
         this.dto = dto;
@@ -77,6 +81,7 @@ public class HarvesterService implements HarvesterApi {
         this.receivedTelemetry = meterRegistry.counter("hsms_telemetry_received_total");
         this.telemetryService = telemetryService;
         this.crewMemberRepository = crewMemberRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -142,16 +147,36 @@ public class HarvesterService implements HarvesterApi {
 
     @Override
     public CrewDto crewByUser(Long userId) {
-        CrewMember crewMember = crewMemberRepository.findByIdClient(userId).orElseThrow();
-        Crew crew = crewRepository.findById(crewMember.getId().getCrew()).orElseThrow();
-        return new CrewDto(
-                crew.getId(),
-                crew.getName(),
-                crew.getStatus(),
-                crew.getContactChannel(),
-                crew.getMemberCount(),
-                crew.getAssignedLogin()
-        );
+        return crewsByUser(userId).stream()
+                .findFirst()
+                .orElseThrow(() -> notFound("Экипаж пользователя не найден", "Проверьте связь пользователя с экипажем."));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CrewDto> crewsByUser(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return crewMemberRepository.findAllByIdClient(userId).stream()
+                .map(CrewMember::getId)
+                .map(id -> crewRepository.findById(id.getCrew())
+                        .orElseThrow(() -> notFound("Экипаж пользователя не найден", "Проверьте связь пользователя с экипажем.")))
+                .map(crew -> new CrewDto(
+                        crew.getId(),
+                        crew.getName(),
+                        crew.getStatus(),
+                        crew.getContactChannel(),
+                        crew.getMemberCount(),
+                        crew.getAssignedLogin()
+                ))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isCrewAssignedToUser(Long userId, Long crewId) {
+        return userId != null && crewId != null && crewMemberRepository.existsByIdClientAndIdCrew(userId, crewId);
     }
 
     @Override
@@ -169,14 +194,32 @@ public class HarvesterService implements HarvesterApi {
         crew.setStatus(request.status() == null ? ResourceStatus.READY : request.status());
         crew.setContactChannel(request.contactChannel().trim());
         crew.setMemberCount(memberCount);
-        crew.setAssignedLogin(blankToDefault(request.assignedLogin(), "crew"));
+        String assignedLogin = blankToDefault(request.assignedLogin(), "crew");
+        crew.setAssignedLogin(assignedLogin);
         Crew saved = crewRepository.saveAndFlush(crew);
+        linkExistingCrewUser(assignedLogin, saved);
         audit.record(actor, "CREW_CREATED", "crew", saved.getId(), null, Map.of(
                 "name", saved.getName(),
                 "assignedLogin", saved.getAssignedLogin(),
                 "status", saved.getStatus().name()
         ));
         return dto.requireCrew(saved.getId());
+    }
+
+    private void linkExistingCrewUser(String assignedLogin, Crew crew) {
+        userRepository.findByLogin(assignedLogin)
+                .filter(user -> access.roles(user).contains(RoleCode.ROLE_HARVESTER_CREW))
+                .ifPresent(user -> {
+                    if (crewMemberRepository.existsByIdClientAndIdCrew(user.getId(), crew.getId())) {
+                        return;
+                    }
+                    CrewMemberId id = new CrewMemberId();
+                    id.setClient(user.getId());
+                    id.setCrew(crew.getId());
+                    CrewMember member = new CrewMember();
+                    member.setId(id);
+                    crewMemberRepository.save(member);
+                });
     }
 
     @Override
@@ -187,8 +230,7 @@ public class HarvesterService implements HarvesterApi {
             throw badRequest("Телеметрию можно передавать только по активному рейсу", "Проверьте идентификатор и статус рейса.");
         }
         if (!access.roles(actor).contains(RoleCode.ROLE_ADMINISTRATOR)) {
-            Crew crew = dto.crewEntity(mission.crewId());
-            if (!actor.getLogin().equals(crew.getAssignedLogin())) {
+            if (!isCrewAssignedToUser(actor.getId(), mission.crewId())) {
                 throw forbidden("Экипаж не назначен на этот рейс", "Передавайте телеметрию только от пользователя, связанного с экипажем рейса.");
             }
         }

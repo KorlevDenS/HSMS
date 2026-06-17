@@ -23,7 +23,6 @@ import com.hsms.backend.insurance.api.InsuranceApi;
 import com.hsms.backend.mission.api.MissionApi;
 import com.hsms.backend.readmodel.HsmsDtoAssembler;
 import com.hsms.backend.risk.api.RiskApi;
-import com.hsms.backend.harvester.model.Crew;
 import com.hsms.backend.security.api.SecurityApi;
 import com.hsms.backend.security.model.AlarmSignal;
 import com.hsms.backend.security.model.EvacuationCommand;
@@ -403,9 +402,7 @@ public class SecurityService implements SecurityApi {
         if (access.roles(actor).contains(RoleCode.ROLE_ADMINISTRATOR)) {
             return;
         }
-        MissionDto mission = dto.mission(missionId);
-        Crew crew = dto.crewEntity(mission.crewId());
-        if (!actor.getLogin().equals(crew.getAssignedLogin())) {
+        if (!missionApi.isMissionOfThisCrew(missionId, actor.getId())) {
             throw forbidden("Экипаж не назначен на этот рейс", action);
         }
     }

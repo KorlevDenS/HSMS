@@ -55,12 +55,13 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
         ));
         assertThat(launched.get("status")).isEqualTo("ACTIVE");
 
-        Map<String, Object> plan = getJson("crew", "/missions/" + missionId + "/plan");
+        String crewActor = crewActor(2);
+        Map<String, Object> plan = getJson(crewActor, "/missions/" + missionId + "/plan");
         assertThat(plan.get("missionId")).isEqualTo((int) missionId);
-        Map<String, Object> acknowledgedPlan = post("crew", "/missions/" + missionId + "/plan/ack", Map.of());
-        assertThat(acknowledgedPlan.get("acknowledgedBy")).isEqualTo("crew");
+        Map<String, Object> acknowledgedPlan = post(crewActor, "/missions/" + missionId + "/plan/ack", Map.of());
+        assertThat(acknowledgedPlan.get("acknowledgedBy")).isEqualTo(crewActor);
 
-        Map<String, Object> telemetry = post("crew", "/missions/" + missionId + "/telemetry", Map.of(
+        Map<String, Object> telemetry = post(crewActor, "/missions/" + missionId + "/telemetry", Map.of(
                 "externalEventId", "it-telemetry-1",
                 "eventTime", Instant.now().toString(),
                 "lat", 22.42,
@@ -70,7 +71,7 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
         assertThat(telemetry.get("status")).isIn("ACCEPTED", "DUPLICATE");
         assertThat(telemetry.get("riskMarkedStale")).isEqualTo(true);
 
-        Map<String, Object> degradedTelemetry = post("crew", "/missions/" + missionId + "/telemetry", Map.of(
+        Map<String, Object> degradedTelemetry = post(crewActor, "/missions/" + missionId + "/telemetry", Map.of(
                 "externalEventId", "it-telemetry-degraded",
                 "eventTime", Instant.now().plusSeconds(1).toString(),
                 "lat", 22.43,
@@ -82,7 +83,7 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
         assertThat(((Number) monitoredMission.get("monitoringPriority")).intValue()).isGreaterThanOrEqualTo(60);
         assertThat((String) monitoredMission.get("monitoringContext")).contains("DEGRADED");
 
-        Map<String, Object> alarm = post("crew", "/missions/" + missionId + "/alarms", Map.of(
+        Map<String, Object> alarm = post(crewActor, "/missions/" + missionId + "/alarms", Map.of(
                 "externalEventId", "it-alarm-1",
                 "eventTime", Instant.now().toString(),
                 "reason", "Сигнатура песчаного червя"
@@ -109,11 +110,11 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
         ));
         assertThat(evacuation.get("status")).isEqualTo("SENT");
 
-        Map<String, Object> delivered = post("crew", "/incidents/" + incidentId + "/evacuation/delivered", Map.of());
+        Map<String, Object> delivered = post(crewActor, "/incidents/" + incidentId + "/evacuation/delivered", Map.of());
         assertThat(delivered.get("status")).isEqualTo("DELIVERED");
         assertThat(delivered.get("deliveredAt")).isNotNull();
 
-        Map<String, Object> acknowledged = post("crew", "/incidents/" + incidentId + "/evacuation/ack", Map.of());
+        Map<String, Object> acknowledged = post(crewActor, "/incidents/" + incidentId + "/evacuation/ack", Map.of());
         assertThat(acknowledged.get("status")).isEqualTo("ACKNOWLEDGED");
 
         post("security", "/incidents/" + incidentId + "/close", Map.of());
@@ -124,10 +125,10 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
         incompleteReport.put("spiceAmount", BigDecimal.valueOf(1204));
         incompleteReport.put("harvesterFinalStatus", "READY");
         incompleteReport.put("abnormalSituations", "");
-        assertThat(status("crew", "POST", "/missions/" + missionId + "/report", incompleteReport)).isEqualTo(400);
+        assertThat(status(crewActor, "POST", "/missions/" + missionId + "/report", incompleteReport)).isEqualTo(400);
 
         Instant reportActualEnd = Instant.now();
-        post("crew", "/missions/" + missionId + "/report", Map.of(
+        post(crewActor, "/missions/" + missionId + "/report", Map.of(
                 "actualStart", Instant.now().minusSeconds(7200).toString(),
                 "actualEnd", reportActualEnd.toString(),
                 "spiceAmount", BigDecimal.valueOf(1204),
@@ -327,6 +328,7 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
 
         long harvesterId = firstId("dispatcher", "/harvesters/free");
         long crewId = firstId("dispatcher", "/crews/free");
+        String crewActor = crewActor(crewId);
 
         Map<String, Object> created = post("dispatcher", "/missions", Map.of(
                 "title", "Интеграционный рейс UC-03 LOW",
@@ -347,7 +349,7 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
                 "reason", "Подтверждено альтернативным интеграционным тестом"
         ));
 
-        Map<String, Object> alarm = post("crew", "/missions/" + missionId + "/alarms", Map.of(
+        Map<String, Object> alarm = post(crewActor, "/missions/" + missionId + "/alarms", Map.of(
                 "externalEventId", "it-low-alarm-1",
                 "eventTime", Instant.now().toString(),
                 "reason", "Сомнительная телеметрия без подтверждения угрозы"
@@ -384,10 +386,15 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
                 "choamImpact", "CHOAM impact is not approved by administrator"
         ))).isEqualTo(403);
 
-        Map<String, Object> crewBootstrap = getJson("crew", "/bootstrap");
+        Map<String, Object> crewBootstrap = getJson("crew1", "/bootstrap");
         assertThat((List<?>) crewBootstrap.get("users")).isEmpty();
         assertThat((List<?>) crewBootstrap.get("audit")).isEmpty();
         assertThat(crewBootstrap.get("dashboard")).isNull();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> crewBootstrapCrews = (List<Map<String, Object>>) crewBootstrap.get("crews");
+        assertThat(crewBootstrapCrews)
+                .isNotEmpty()
+                .allSatisfy(item -> assertThat(item.get("assignedLogin")).isEqualTo("crew1"));
 
         Map<String, Object> harvester = post("dispatcher", "/harvesters", Map.of(
                 "name", "HV-IT-RBAC",
@@ -423,16 +430,17 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
                 "confirmWarning", true,
                 "reason", "Запуск для проверки RBAC экипажа"
         ));
-        assertThat(statusGet("crew", "/missions/" + missionId + "/plan")).isEqualTo(403);
-        assertThat(status("crew", "POST", "/missions/" + missionId + "/plan/ack", Map.of())).isEqualTo(403);
-        assertThat(status("crew", "POST", "/missions/" + missionId + "/telemetry", Map.of(
+        assertThat(statusGet("crew1", "/missions/" + missionId)).isEqualTo(403);
+        assertThat(statusGet("crew1", "/missions/" + missionId + "/plan")).isEqualTo(403);
+        assertThat(status("crew1", "POST", "/missions/" + missionId + "/plan/ack", Map.of())).isEqualTo(403);
+        assertThat(status("crew1", "POST", "/missions/" + missionId + "/telemetry", Map.of(
                 "externalEventId", "it-rbac-forbidden",
                 "eventTime", Instant.now().toString(),
                 "lat", 24.45,
                 "lon", 54.21,
                 "equipmentStatus", "NORMAL"
         ))).isEqualTo(403);
-        assertThat(status("crew", "POST", "/missions/" + missionId + "/report", Map.of(
+        assertThat(status("crew1", "POST", "/missions/" + missionId + "/report", Map.of(
                 "actualStart", Instant.now().minusSeconds(1800).toString(),
                 "actualEnd", Instant.now().toString(),
                 "spiceAmount", BigDecimal.TEN,
@@ -487,18 +495,13 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
                 "noiseLevel", 0.55,
                 "capacity", 140
         ));
-        Map<String, Object> crew = post("dispatcher", "/crews", Map.of(
-                "name", "Экипаж IT RiskList",
-                "status", "READY",
-                "contactChannel", "it-risklist",
-                "memberCount", 5,
-                "assignedLogin", "crew"
-        ));
+        long crewId = firstId("dispatcher", "/crews/free");
+        String crewActor = crewActor(crewId);
         Map<String, Object> mission = post("dispatcher", "/missions", Map.of(
                 "title", "Рейс проверки RiskList",
                 "zoneId", 2,
                 "harvesterId", id(harvester),
-                "crewId", id(crew),
+                "crewId", crewId,
                 "plannedStart", Instant.now().plusSeconds(3600).toString(),
                 "plannedEnd", Instant.now().plusSeconds(10800).toString(),
                 "route", List.of(
@@ -513,7 +516,7 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
                 "reason", "Запуск для проверки деградации телеметрии"
         ));
 
-        Map<String, Object> staleTelemetry = post("crew", "/missions/" + missionId + "/telemetry", Map.of(
+        Map<String, Object> staleTelemetry = post(crewActor, "/missions/" + missionId + "/telemetry", Map.of(
                 "externalEventId", "it-risklist-stale-telemetry",
                 "eventTime", Instant.now().minusSeconds(900).toString(),
                 "lat", 22.21,
@@ -674,6 +677,13 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
 
     private long id(Map<String, Object> map) {
         return ((Number) map.get("id")).longValue();
+    }
+
+    private String crewActor(long crewId) {
+        if (crewId >= 1 && crewId <= 3) {
+            return "crew" + crewId;
+        }
+        throw new AssertionError("No seeded crew account for crewId=" + crewId);
     }
 
     private void assertRoutePoint(Map<String, Object> mission, int index, int seqNo, double lat, double lon) {

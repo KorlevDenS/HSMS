@@ -24,9 +24,19 @@ export function LoginScreen({ busy, loginName, message, password, setLoginName, 
           </Stack>
           <FormControl fullWidth>
             <InputLabel id="login-user-label" htmlFor="login-user-native">Пользователь</InputLabel>
-            <Select id="login-user" labelId="login-user-label" name="loginName" value={loginName} label="Пользователь" onChange={(event) => setLoginName(event.target.value)} inputProps={{ id: 'login-user-native', autoComplete: 'username', 'aria-label': 'Пользователь' }}>
+            <Select
+              id="login-user"
+              labelId="login-user-label"
+              name="loginName"
+              label="Пользователь"
+              value={loginName}
+              onChange={(event) => setLoginName(event.target.value)}
+              inputProps={{ id: 'login-user-native', 'aria-label': 'Пользователь' }}
+            >
               {roles.map(([value, label]) => (
-                <MenuItem key={value} value={value}>{label}</MenuItem>
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>

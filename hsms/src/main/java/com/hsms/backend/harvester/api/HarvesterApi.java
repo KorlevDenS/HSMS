@@ -27,6 +27,10 @@ public interface HarvesterApi {
 
     CrewDto crewByUser(Long userId);
 
+    List<CrewDto> crewsByUser(Long userId);
+
+    boolean isCrewAssignedToUser(Long userId, Long crewId);
+
     CrewDto createCrew(String actorLogin, CrewCreateRequest request);
 
     TelemetryResponse submitTelemetry(String actorLogin, long missionId, TelemetryRequest request);

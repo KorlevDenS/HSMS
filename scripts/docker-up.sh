@@ -258,7 +258,9 @@ echo "  PostgreSQL:         localhost:${HSMS_POSTGRES_PORT} db=hsms user=${POSTG
 echo
 echo "HSMS users:"
 echo "  dispatcher / hsms123"
-echo "  crew       / hsms123"
+echo "  crew1      / hsms123"
+echo "  crew2      / hsms123"
+echo "  crew3      / hsms123"
 echo "  security   / hsms123"
 echo "  insurance  / hsms123"
 echo "  management / hsms123"

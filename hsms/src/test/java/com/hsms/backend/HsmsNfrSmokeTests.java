@@ -89,7 +89,7 @@ class HsmsNfrSmokeTests extends H2IntegrationTestBase {
                 "status", "READY",
                 "contactChannel", "nfr-telemetry",
                 "memberCount", 4,
-                "assignedLogin", "crew"
+                "assignedLogin", "crew1"
         ));
         Map<String, Object> created = post("dispatcher", "/missions", Map.of(
                 "title", "NFR telemetry burst рейс",
@@ -114,7 +114,7 @@ class HsmsNfrSmokeTests extends H2IntegrationTestBase {
         Instant startedAt = Instant.now();
         try {
             List<CompletableFuture<Integer>> futures = IntStream.range(0, 200)
-                    .mapToObj(index -> CompletableFuture.supplyAsync(() -> status("crew", "POST", "/missions/" + missionId + "/telemetry", Map.of(
+                    .mapToObj(index -> CompletableFuture.supplyAsync(() -> status("crew1", "POST", "/missions/" + missionId + "/telemetry", Map.of(
                             "externalEventId", "nfr-tel-" + missionId + "-" + index,
                             "eventTime", Instant.now().plusMillis(index).toString(),
                             "lat", 24.42 + index * 0.0001,

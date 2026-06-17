@@ -32,6 +32,12 @@ public class HsmsAccessService {
     }
 
     @Transactional(readOnly = true)
+    public HsmsUser requireUser(long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> notFound("Пользователь не найден", "Проверьте учетную запись."));
+    }
+
+    @Transactional(readOnly = true)
     public HsmsUser requireAny(String login, RoleCode... allowedRoles) {
         HsmsUser user = requireUser(login);
         Set<RoleCode> allowed = Set.copyOf(Arrays.asList(allowedRoles));
