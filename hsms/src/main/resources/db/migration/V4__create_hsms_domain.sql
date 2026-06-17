@@ -2,24 +2,24 @@ INSERT INTO hsms_user (id, display_name, phone_number, email, login, password)
 SELECT 1, 'Диспетчер снабжения', '+7-900-001', 'dispatcher@hsms.local', 'dispatcher', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
 WHERE NOT EXISTS (SELECT 1 FROM hsms_user WHERE login = 'dispatcher');
 
-INSERT INTO hsms_user (id, display_name, phone_number, email, login, password)
-SELECT 2, 'Экипаж харвестера', '+7-900-002', 'crew@hsms.local', 'crew', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
-WHERE NOT EXISTS (SELECT 1 FROM hsms_user WHERE login = 'crew');
+-- INSERT INTO hsms_user (id, display_name, phone_number, email, login, password)
+-- SELECT 2, 'Экипаж харвестера', '+7-900-002', 'crew@hsms.local', 'crew', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
+-- WHERE NOT EXISTS (SELECT 1 FROM hsms_user WHERE login = 'crew');
 
 INSERT INTO hsms_user (id, display_name, phone_number, email, login, password)
-SELECT 3, 'Оператор штаба', '+7-900-003', 'security@hsms.local', 'security', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
+SELECT 2, 'Оператор штаба', '+7-900-003', 'security@hsms.local', 'security', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
 WHERE NOT EXISTS (SELECT 1 FROM hsms_user WHERE login = 'security');
 
 INSERT INTO hsms_user (id, display_name, phone_number, email, login, password)
-SELECT 4, 'Оператор страхового контура', '+7-900-004', 'insurance@hsms.local', 'insurance', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
+SELECT 3, 'Оператор страхового контура', '+7-900-004', 'insurance@hsms.local', 'insurance', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
 WHERE NOT EXISTS (SELECT 1 FROM hsms_user WHERE login = 'insurance');
 
 INSERT INTO hsms_user (id, display_name, phone_number, email, login, password)
-SELECT 5, 'Руководство операций', '+7-900-005', 'management@hsms.local', 'management', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
+SELECT 4, 'Руководство операций', '+7-900-005', 'management@hsms.local', 'management', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
 WHERE NOT EXISTS (SELECT 1 FROM hsms_user WHERE login = 'management');
 
 INSERT INTO hsms_user (id, display_name, phone_number, email, login, password)
-SELECT 6, 'Администратор', '+7-900-006', 'admin@hsms.local', 'admin', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
+SELECT 5, 'Администратор', '+7-900-006', 'admin@hsms.local', 'admin', '{bcrypt}$2b$10$ZzKPX8aJH8b8VAqlmdioTunUhCSozq2qyBboHqlmVPMgWj9W6Goq6'
 WHERE NOT EXISTS (SELECT 1 FROM hsms_user WHERE login = 'admin');
 
 INSERT INTO permission (client, role)
@@ -28,11 +28,11 @@ FROM hsms_user u, role r
 WHERE u.login = 'dispatcher' AND r.name = 'ROLE_SUPPLY_MANAGER'
 ON CONFLICT DO NOTHING;
 
-INSERT INTO permission (client, role)
-SELECT u.id, r.id
-FROM hsms_user u, role r
-WHERE u.login = 'crew' AND r.name = 'ROLE_HARVESTER_CREW'
-ON CONFLICT DO NOTHING;
+-- INSERT INTO permission (client, role)
+-- SELECT u.id, r.id
+-- FROM hsms_user u, role r
+-- WHERE u.login = 'crew' AND r.name = 'ROLE_HARVESTER_CREW'
+-- ON CONFLICT DO NOTHING;
 
 INSERT INTO permission (client, role)
 SELECT u.id, r.id

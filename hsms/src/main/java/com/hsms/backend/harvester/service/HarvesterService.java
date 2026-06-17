@@ -17,8 +17,10 @@ import com.hsms.backend.common.TelemetryRequest;
 import com.hsms.backend.common.TelemetryResponse;
 import com.hsms.backend.harvester.api.HarvesterApi;
 import com.hsms.backend.harvester.model.Crew;
+import com.hsms.backend.harvester.model.CrewMember;
 import com.hsms.backend.harvester.model.Harvester;
 import com.hsms.backend.harvester.model.TelemetryEvent;
+import com.hsms.backend.harvester.repository.CrewMemberRepository;
 import com.hsms.backend.harvester.repository.CrewRepository;
 import com.hsms.backend.harvester.repository.HarvesterRepository;
 import com.hsms.backend.harvester.repository.TelemetryEventRepository;
@@ -51,6 +53,7 @@ public class HarvesterService implements HarvesterApi {
     private final Counter duplicateTelemetry;
     private final Counter receivedTelemetry;
     private final TelemetryService telemetryService;
+    private final CrewMemberRepository crewMemberRepository;
 
     public HarvesterService(
             HsmsAccessService access,
@@ -61,8 +64,8 @@ public class HarvesterService implements HarvesterApi {
             TelemetryEventRepository telemetryEventRepository,
             RiskApi riskApi,
             MeterRegistry meterRegistry,
-            TelemetryService telemetryService
-    ) {
+            TelemetryService telemetryService,
+            CrewMemberRepository crewMemberRepository) {
         this.access = access;
         this.audit = audit;
         this.dto = dto;
@@ -73,6 +76,7 @@ public class HarvesterService implements HarvesterApi {
         this.duplicateTelemetry = meterRegistry.counter("hsms_telemetry_duplicate_total");
         this.receivedTelemetry = meterRegistry.counter("hsms_telemetry_received_total");
         this.telemetryService = telemetryService;
+        this.crewMemberRepository = crewMemberRepository;
     }
 
     @Override
@@ -134,6 +138,20 @@ public class HarvesterService implements HarvesterApi {
     @Transactional(readOnly = true)
     public CrewDto crew(long crewId) {
         return dto.requireCrew(crewId);
+    }
+
+    @Override
+    public CrewDto crewByUser(Long userId) {
+        CrewMember crewMember = crewMemberRepository.findByIdClient(userId).orElseThrow();
+        Crew crew = crewRepository.findById(crewMember.getId().getCrew()).orElseThrow();
+        return new CrewDto(
+                crew.getId(),
+                crew.getName(),
+                crew.getStatus(),
+                crew.getContactChannel(),
+                crew.getMemberCount(),
+                crew.getAssignedLogin()
+        );
     }
 
     @Override

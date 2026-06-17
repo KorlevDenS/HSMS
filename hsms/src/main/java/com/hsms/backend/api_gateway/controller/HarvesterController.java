@@ -78,7 +78,7 @@ public class HarvesterController extends HsmsControllerSupport {
     }
 
     @PostMapping("/missions/{missionId}/telemetry")
-    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_ADMINISTRATOR') and @missionService.isMissionOfThisCrew(#missionId, authentication.principal.id)")
     public TelemetryResponse submitTelemetry(
             Authentication authentication,
             @PathVariable long missionId,
@@ -88,13 +88,13 @@ public class HarvesterController extends HsmsControllerSupport {
     }
 
     @GetMapping("/missions/{missionId}/telemetry")
-    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_SECURITY_HEADQUARTERS_OPERATOR','ROLE_SUPPLY_MANAGER','ROLE_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_SECURITY_HEADQUARTERS_OPERATOR','ROLE_SUPPLY_MANAGER','ROLE_ADMINISTRATOR') and @missionService.isMissionOfThisCrew(#missionId, authentication.principal.id)")
     public List<TelemetryEventDto> telemetry(@PathVariable long missionId) {
         return harvesterApi.telemetry(missionId);
     }
 
     @GetMapping("/missions/{missionId}/telemetry/latest")
-    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_SECURITY_HEADQUARTERS_OPERATOR','ROLE_SUPPLY_MANAGER','ROLE_ADMINISTRATOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_HARVESTER_CREW','ROLE_SECURITY_HEADQUARTERS_OPERATOR','ROLE_SUPPLY_MANAGER','ROLE_ADMINISTRATOR') and @missionService.isMissionOfThisCrew(#missionId, authentication.principal.id)")
     public TelemetryEventDto latestTelemetry(@PathVariable long missionId) {
         return harvesterApi.latestTelemetry(missionId);
     }

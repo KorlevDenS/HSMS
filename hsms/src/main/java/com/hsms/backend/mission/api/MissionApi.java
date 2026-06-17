@@ -14,6 +14,9 @@ import java.time.Instant;
 import java.util.List;
 
 public interface MissionApi {
+
+    boolean isMissionOfThisCrew(Long missionId, Long userId);
+
     List<MissionDto> missions();
 
     MissionDto mission(long missionId);

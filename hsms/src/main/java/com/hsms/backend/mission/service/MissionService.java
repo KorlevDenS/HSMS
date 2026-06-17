@@ -23,6 +23,7 @@ import com.hsms.backend.common.RiskSnapshotDto;
 import com.hsms.backend.common.RoleCode;
 import com.hsms.backend.common.RoutePointDto;
 import com.hsms.backend.common.HsmsException;
+import com.hsms.backend.harvester.api.HarvesterApi;
 import com.hsms.backend.harvester.model.MissionReport;
 import com.hsms.backend.harvester.repository.MissionReportRepository;
 import com.hsms.backend.mission.api.MissionApi;
@@ -38,10 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.hsms.backend.common.HsmsOps.*;
 
@@ -65,6 +63,7 @@ public class MissionService implements MissionApi {
     private final MissionReportRepository missionReportRepository;
     private final Counter blockedLaunches;
     private final Counter riskCancelledMissions;
+    private final HarvesterApi harvesterApi;
 
     public MissionService(
             HsmsAccessService access,
@@ -73,8 +72,8 @@ public class MissionService implements MissionApi {
             MissionRepository missionRepository,
             MissionPlanRepository missionPlanRepository,
             MissionReportRepository missionReportRepository,
-            MeterRegistry meterRegistry
-    ) {
+            MeterRegistry meterRegistry,
+            HarvesterApi harvesterApi) {
         this.access = access;
         this.audit = audit;
         this.dto = dto;
@@ -83,6 +82,14 @@ public class MissionService implements MissionApi {
         this.missionReportRepository = missionReportRepository;
         this.blockedLaunches = meterRegistry.counter("hsms_risk_blocked_launch_total");
         this.riskCancelledMissions = meterRegistry.counter("hsms_missions_risk_cancelled_total");
+        this.harvesterApi = harvesterApi;
+    }
+
+    @Override
+    public boolean isMissionOfThisCrew(Long missionId, Long userId) {
+        Mission mission = missionRepository.findById(missionId).orElseThrow();
+        CrewDto crewDto = harvesterApi.crewByUser(userId);
+        return mission.getCrew().getId() == crewDto.id();
     }
 
     @Override
