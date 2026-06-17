@@ -6,10 +6,17 @@ import { Panel } from '../../shared/components/Panel';
 import { datetimeLocal, nowPlus, isoFromLocal } from '../../shared/formatters';
 import { numberOrNull, parseRouteText, routeTextFromMission } from '../../shared/missionForms';
 import { statusText } from '../../shared/status';
+import { useMissionTimeline } from '../../hooks/useMissionTimeline';
 import { MissionCard } from './MissionCard';
+import { MissionOperationalContext } from './MissionOperationalContext';
 import { MissionTable } from './MissionTable';
 
-export function MissionsView({ api, run, ask, missions, selectedMission, setSelectedMissionId, zones, harvesters, crews }) {
+export function MissionsView({ api, run, ask, dataVersion, missions, selectedMission, setSelectedMissionId, zones, harvesters, crews }) {
+  const { error: timelineError, loading: timelineLoading, timeline } = useMissionTimeline({
+    api,
+    missionId: selectedMission?.id,
+    refreshKey: dataVersion
+  });
   const [form, setForm] = useState(() => ({
     title: `Рейс добычи ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`,
     zoneId: zones[0]?.id || 1,
@@ -202,6 +209,16 @@ export function MissionsView({ api, run, ask, missions, selectedMission, setSele
       </Grid>
       <Grid size={{ xs: 12, lg: 4 }}>
         <MissionCard mission={selectedMission} />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <Panel title="Операционный контекст рейса">
+          <MissionOperationalContext
+            error={timelineError}
+            loading={timelineLoading}
+            mission={selectedMission}
+            timeline={timeline}
+          />
+        </Panel>
       </Grid>
     </Grid>
   );

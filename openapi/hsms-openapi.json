@@ -3008,6 +3008,12 @@
               "$ref": "#/components/schemas/IncidentDto"
             }
           },
+          "riskHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskSnapshotDto"
+            }
+          },
           "insuranceCase": {
             "$ref": "#/components/schemas/InsuranceCaseDto"
           },

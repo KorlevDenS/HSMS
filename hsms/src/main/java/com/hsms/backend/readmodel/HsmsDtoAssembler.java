@@ -228,6 +228,11 @@ public class HsmsDtoAssembler {
         return riskScoreRepository.findFirstByMissionIdOrderByCalculatedAtDescIdDesc(missionId).map(this::risk);
     }
 
+    public List<RiskSnapshotDto> riskHistory(long missionId) {
+        requireMissionExists(missionId);
+        return riskScoreRepository.findByMissionIdOrderByCalculatedAtDescIdDesc(missionId).stream().map(this::risk).toList();
+    }
+
     public List<TelemetryEventDto> telemetry(long missionId) {
         requireMissionExists(missionId);
         return telemetryEventRepository.findByMissionIdOrderByEventTimeDescIdDesc(missionId).stream().map(this::telemetry).toList();
@@ -330,9 +335,10 @@ public class HsmsDtoAssembler {
         return new MissionTimelineDto(
                 mission,
                 telemetry(missionId),
-                mission.incidentIds().stream()
-                        .map(incidentId -> incident(incidentId.longValue()))
+                incidentRepository.findByMissionIdOrderByIdAsc(missionId).stream()
+                        .map(this::incident)
                         .toList(),
+                riskHistory(missionId),
                 insurance,
                 audit(missionId)
         );

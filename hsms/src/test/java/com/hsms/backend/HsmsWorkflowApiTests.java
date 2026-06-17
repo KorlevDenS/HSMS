@@ -146,6 +146,34 @@ class HsmsWorkflowApiTests extends H2IntegrationTestBase {
         assertThat(closedMission.get("riskReviewReason")).isNull();
         long insuranceCaseId = ((Number) closedMission.get("insuranceCaseId")).longValue();
 
+        Map<String, Object> dispatcherTimeline = getJson("dispatcher", "/missions/" + missionId + "/timeline");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> dispatcherTelemetry = (List<Map<String, Object>>) dispatcherTimeline.get("telemetry");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> dispatcherIncidents = (List<Map<String, Object>>) dispatcherTimeline.get("incidents");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> dispatcherRiskHistory = (List<Map<String, Object>>) dispatcherTimeline.get("riskHistory");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> dispatcherAudit = (List<Map<String, Object>>) dispatcherTimeline.get("audit");
+        assertThat(dispatcherTelemetry).extracting(item -> item.get("equipmentStatus")).contains("NORMAL", "DEGRADED");
+        assertThat(dispatcherIncidents).extracting(item -> ((Number) item.get("id")).longValue()).contains(incidentId);
+        assertThat(dispatcherRiskHistory).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(dispatcherRiskHistory.get(0).get("stale")).isEqualTo(false);
+        assertThat(dispatcherAudit).extracting(item -> item.get("action"))
+                .contains("INCIDENT_CLASSIFIED", "EVACUATION_COMMAND_SENT", "INCIDENT_CLOSED", "MISSION_CLOSED");
+
+        Map<String, Object> securityTimeline = getJson("security", "/missions/" + missionId + "/timeline");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> securityTelemetry = (List<Map<String, Object>>) securityTimeline.get("telemetry");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> securityRiskHistory = (List<Map<String, Object>>) securityTimeline.get("riskHistory");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> securityAudit = (List<Map<String, Object>>) securityTimeline.get("audit");
+        assertThat(securityTelemetry).isNotEmpty();
+        assertThat(securityRiskHistory).hasSize(dispatcherRiskHistory.size());
+        assertThat(securityAudit).extracting(item -> item.get("action"))
+                .contains("TELEMETRY_RECEIVED", "INCIDENT_CLASSIFIED", "EVACUATION_COMMAND_SENT");
+
         Map<String, Object> waitingCase = post("insurance", "/insurance-cases/" + insuranceCaseId + "/close", Map.of(
                 "reason", "Попытка закрытия без перерасчета"
         ));

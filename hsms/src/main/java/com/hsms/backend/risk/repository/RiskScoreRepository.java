@@ -9,5 +9,7 @@ import java.util.Optional;
 public interface RiskScoreRepository extends JpaRepository<RiskScore, Long> {
     Optional<RiskScore> findFirstByMissionIdOrderByCalculatedAtDescIdDesc(Long missionId);
 
+    List<RiskScore> findByMissionIdOrderByCalculatedAtDescIdDesc(Long missionId);
+
     List<RiskScore> findByMissionIdAndStaleFalse(Long missionId);
 }

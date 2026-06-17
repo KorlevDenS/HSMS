@@ -138,9 +138,48 @@ body {
 
 .security-context-details {
   margin-top: 12px;
-  max-height: min(360px, 42vh);
+  max-height: min(760px, 68vh);
   overflow: auto;
   padding-right: 4px;
+}
+
+.mission-context {
+  min-width: 0;
+}
+
+.mission-context-card {
+  min-height: 100%;
+  padding: 12px;
+  border: 1px solid #d8ded5;
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.mission-context-row {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mission-context-row > *:last-child {
+  max-width: 64%;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.mission-context-table {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.mission-context-table .MuiTable-root {
+  min-width: 560px;
+}
+
+.mission-context-details-cell {
+  max-width: 360px;
+  overflow-wrap: anywhere;
 }
 
 .tone-error .kpi-icon {

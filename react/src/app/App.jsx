@@ -41,6 +41,7 @@ export function App() {
   const api = useHsmsApi(session?.token);
   const {
     data,
+    dataVersion,
     refresh,
     reset,
     selectedMissionId,
@@ -178,9 +179,9 @@ export function App() {
         visibleSections={visibleSections}
       >
         {section === 'overview' && <Overview dashboard={dashboard} missions={orderedMissions} incidents={data?.incidents || []} />}
-        {section === 'missions' && <MissionsView api={api} run={run} ask={ask} missions={orderedMissions} selectedMission={selectedMission} setSelectedMissionId={setSelectedMissionId} zones={data?.zones || []} harvesters={data?.harvesters || []} crews={data?.crews || []} />}
+        {section === 'missions' && <MissionsView api={api} run={run} ask={ask} dataVersion={dataVersion} missions={orderedMissions} selectedMission={selectedMission} setSelectedMissionId={setSelectedMissionId} zones={data?.zones || []} harvesters={data?.harvesters || []} crews={data?.crews || []} />}
         {section === 'crew' && <CrewView api={api} run={run} missions={orderedMissions} selectedMission={selectedMission} setSelectedMissionId={setSelectedMissionId} canSwitchMission={isAdmin} incidents={data?.incidents || []} telemetryQueue={telemetryQueue} enqueueTelemetry={enqueueTelemetry} />}
-        {section === 'security' && <SecurityView run={run} ask={ask} incidents={data?.incidents || []} missions={orderedMissions} selectedIncident={selectedIncident} setSelectedIncidentId={setSelectedIncidentId} api={api} />}
+        {section === 'security' && <SecurityView run={run} ask={ask} dataVersion={dataVersion} incidents={data?.incidents || []} missions={orderedMissions} selectedIncident={selectedIncident} setSelectedIncidentId={setSelectedIncidentId} api={api} />}
         {section === 'insurance' && <InsuranceView run={run} ask={ask} cases={data?.insuranceCases || []} selectedCase={selectedCase} setSelectedCaseId={setSelectedCaseId} api={api} />}
         {section === 'reports' && <ReportsView api={api} run={run} dashboard={dashboard} />}
         {section === 'admin' && <AdminView api={api} run={run} users={data?.users || []} policy={data?.activeRiskPolicy} audit={data?.audit || []} missions={orderedMissions} incidents={data?.incidents || []} cases={data?.insuranceCases || []} />}

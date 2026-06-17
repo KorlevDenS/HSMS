@@ -7,6 +7,7 @@ const MAX_RETRY_DELAY_MS = 8000;
 
 export function useHsmsBootstrap({ api, sessionToken, notify }) {
   const [data, setData] = useState(null);
+  const [dataVersion, setDataVersion] = useState(0);
   const [streamState, setStreamState] = useState('offline');
   const [selectedMissionId, setSelectedMissionId] = useState(null);
 
@@ -18,6 +19,7 @@ export function useHsmsBootstrap({ api, sessionToken, notify }) {
       try {
         const bootstrap = await api('/bootstrap');
         setData(bootstrap);
+        setDataVersion((current) => current + 1);
         setStreamState((current) => current === 'offline' ? 'online' : current);
 
         if (bootstrap.missions?.length) {
@@ -52,12 +54,14 @@ export function useHsmsBootstrap({ api, sessionToken, notify }) {
 
   const reset = useCallback(() => {
     setData(null);
+    setDataVersion(0);
     setStreamState('offline');
     setSelectedMissionId(null);
   }, []);
 
   return {
     data,
+    dataVersion,
     refresh,
     reset,
     selectedMissionId,

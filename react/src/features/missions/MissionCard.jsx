@@ -8,7 +8,7 @@ function MissionCardRow({ label, children }) {
   return (
     <Stack className="mission-card-row" direction="row">
       <Typography color="text.secondary">{label}</Typography>
-      <Typography className="mission-card-value" fontWeight={700}>{children}</Typography>
+      <Box className="mission-card-value" fontWeight={700}>{children}</Box>
     </Stack>
   );
 }

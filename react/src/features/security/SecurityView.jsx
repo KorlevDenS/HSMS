@@ -5,10 +5,12 @@ import { terminalEvacuationStatuses } from '../../shared/constants';
 import { Kpi } from '../../shared/components/Kpi';
 import { Panel } from '../../shared/components/Panel';
 import { useNow } from '../../hooks/useNow';
+import { useMissionTimeline } from '../../hooks/useMissionTimeline';
 import { severityColor, severityText, slaState, statusColor, statusText } from '../../shared/status';
 import { MissionCard } from '../missions/MissionCard';
+import { MissionOperationalContext } from '../missions/MissionOperationalContext';
 
-export function SecurityView({ run, ask, incidents, missions, selectedIncident, setSelectedIncidentId, api }) {
+export function SecurityView({ run, ask, dataVersion, incidents, missions, selectedIncident, setSelectedIncidentId, api }) {
   const now = useNow();
   const [classification, setClassification] = useState({
     severity: 'HIGH',
@@ -17,6 +19,11 @@ export function SecurityView({ run, ask, incidents, missions, selectedIncident, 
   const [evacuationReason, setEvacuationReason] = useState('Решение штаба безопасности');
   const [deliveryFailureReason, setDeliveryFailureReason] = useState('Канал связи не подтвердил доставку команды');
   const incidentMission = missions.find((mission) => mission.id === selectedIncident?.missionId);
+  const { error: timelineError, loading: timelineLoading, timeline } = useMissionTimeline({
+    api,
+    missionId: selectedIncident?.missionId,
+    refreshKey: dataVersion
+  });
   const selectedSla = slaState(selectedIncident, now);
   const selectedIncidentClosed = !selectedIncident || selectedIncident.status === 'CLOSED';
   const selectedEvacuationStatus = selectedIncident?.evacuationCommand?.status;
@@ -74,6 +81,15 @@ export function SecurityView({ run, ask, incidents, missions, selectedIncident, 
           )}
           <Box className="security-context-details">
             {incidentMission && <MissionCard mission={incidentMission} compact embedded />}
+            <Box sx={{ mt: 2 }}>
+              <MissionOperationalContext
+                error={timelineError}
+                focusIncidentId={selectedIncident?.id}
+                loading={timelineLoading}
+                mission={incidentMission}
+                timeline={timeline}
+              />
+            </Box>
           </Box>
         </Panel>
       </Grid>
